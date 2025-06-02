@@ -10,7 +10,7 @@
   - Manage trainings and exercises
 
 ## Screenshots
-<img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/practice.png" width="30%" alt="Practice Screenshot">
+<img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/practices.png" width="30%" alt="Practice Screenshot">
 
 ## Documentation
 Read the documentation for in-depth tutorials and usage [WIP].
