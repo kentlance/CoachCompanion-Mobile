@@ -11,19 +11,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 interface PracticeCategoryModalProps {
   name: string;
   description: string;
-  onPress: () => void;
 }
 
 export default function PracticeCategoryModal({
   name,
   description,
-  onPress,
 }: PracticeCategoryModalProps) {
   return (
     <SafeAreaView>
       <View style={styles.container}>
         <View style={styles.text_container}>
-          <TouchableOpacity onPress={onPress}>
+          <TouchableOpacity>
             <Text style={styles.practice_name}>{name}</Text>
             <Text
               style={styles.practice_description}

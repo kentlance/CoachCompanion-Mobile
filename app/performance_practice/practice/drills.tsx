@@ -12,7 +12,7 @@ interface DrillItem {
   from_id: number;
 }
 
-export default function Drills() {
+const Drills: React.FC = () => {
   const route = useRoute();
   const { id } = route.params as { id: number };
   const filteredDrills = drills_list.filter((drill) => drill.from_id === id);
@@ -34,7 +34,9 @@ export default function Drills() {
       </View>
     </SafeAreaView>
   );
-}
+};
+
+export default Drills;
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
