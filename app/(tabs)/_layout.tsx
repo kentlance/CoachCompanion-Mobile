@@ -1,11 +1,12 @@
-import React from "react";
-import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
+// app/(tabs)/_layout.tsx
+import { Tabs } from "expo-router";
 export default function TabLayout() {
   return (
-    <View style={{ backgroundColor: "#E9E9E9", flex: 1 }}>
-      <SafeAreaView edges={["top"]}></SafeAreaView>
-    </View>
+    <Tabs>
+      <Tabs.Screen
+        name="performance_practice"
+        options={{ headerShown: false, title: "Performance and Practice" }}
+      />
+    </Tabs>
   );
 }

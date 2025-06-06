@@ -3,10 +3,9 @@ import {
   Dimensions,
   StyleSheet,
   Text,
-  TouchableOpacity,
+  // TouchableOpacity, // REMOVE THIS IMPORT
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 interface PracticeCategoryModalProps {
   name: string;
@@ -18,22 +17,20 @@ export default function PracticeCategoryModal({
   description,
 }: PracticeCategoryModalProps) {
   return (
-    <SafeAreaView>
+    <View>
       <View style={styles.container}>
         <View style={styles.text_container}>
-          <TouchableOpacity>
-            <Text style={styles.practice_name}>{name}</Text>
-            <Text
-              style={styles.practice_description}
-              numberOfLines={6}
-              ellipsizeMode="tail"
-            >
-              {description}
-            </Text>
-          </TouchableOpacity>
+          <Text style={styles.practice_name}>{name}</Text>
+          <Text
+            style={styles.practice_description}
+            numberOfLines={6}
+            ellipsizeMode="tail"
+          >
+            {description}
+          </Text>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -47,7 +44,8 @@ const styles = StyleSheet.create({
     width: screenWidth * 0.9,
     minHeight: screenHeight * 0.2,
     justifyContent: "flex-end",
-    marginBottom: -50,
+    marginBottom: 10,
+    marginTop: 10,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
