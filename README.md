@@ -8,6 +8,10 @@
 - Athlete Trainings and Exercises
   - Generate athlete-specific trainings and exercises
   - Manage trainings and exercises
+ 
+## Code Features
+- Dynamic Structuring
+- Reusable Components
 
 ## Screenshots
 <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/practices.png" width="30%" alt="Practice Screenshot">
