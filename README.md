@@ -15,8 +15,8 @@
 
 ## Screenshots
 <div>
-  <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/practices.png" width="20%" alt="Practice Screenshot">
-  <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/athletes.png" width="20%" alt="Athletes Screenshot">
+  <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/practices.png" width="30%" alt="Practice Screenshot">
+  <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/athletes.png" width="30%" alt="Athletes Screenshot">
 </div>
 
 
