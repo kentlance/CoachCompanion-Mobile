@@ -17,6 +17,8 @@
 <div>
   <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/practices.png" width="30%" alt="Practice Screenshot">
   <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/athletes.png" width="30%" alt="Athletes Screenshot">
+  <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/athlete_performance_overall.png" width="30%" alt="Athletes Performance Overall">
+  <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/athlete_performance_graphs.png" width="30%" alt="Athletes Performance Graph">
 </div>
 
 ## Dependencies
