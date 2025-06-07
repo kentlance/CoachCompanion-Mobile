@@ -14,7 +14,12 @@
 - Reusable Components
 
 ## Screenshots
-<img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/practices.png" width="30%" alt="Practice Screenshot">
+<div>
+  <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/practices.png" width="30%" alt="Practice Screenshot">
+  <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/athletes.png" width="30%" alt="Athletes Screenshot">
+</div>
+
+
 
 ## Documentation
 Read the documentation for in-depth tutorials and usage [WIP].
