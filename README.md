@@ -19,7 +19,10 @@
   <img src="https://github.com/kentlance/CoachCompanion-Mobile/blob/master/assets/images/athletes.png" width="30%" alt="Athletes Screenshot">
 </div>
 
-
+## Dependencies
+- Expo Router
+- Nativewind
+- react-native-chart-kit
 
 ## Documentation
 Read the documentation for in-depth tutorials and usage [WIP].
