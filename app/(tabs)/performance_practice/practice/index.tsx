@@ -1,6 +1,7 @@
 // app/performance_practice/practice/index.tsx
 import React, { useState } from "react";
 import {
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -8,12 +9,11 @@ import {
   TextInput,
   View,
 } from "react-native";
-import AddPracticeModal from "./add_practice_modal";
-import drills_list from "./drills_list"; // drills data
-import practices_list_initial from "./practices"; // categories data
-import PracticeCategoryModal from "./practice_category_modal"; // Your category display component
+import drills_list from "./drills_list";
+import practices_list_initial from "./practices";
+import PracticeCategoryModal from "./practice_category_modal";
+import PracticeFormModal from "./practice_form_modal";
 
-// Define interfaces for your data
 interface PracticeCategory {
   id: number;
   name: string;
@@ -33,13 +33,13 @@ const PracticeScreen: React.FC = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     null
   );
-
-  // Manage practices list
   const [practices, setPractices] = useState<PracticeCategory[]>(
     practices_list_initial
   );
 
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isFormModalVisible, setIsFormModalVisible] = useState(false);
+  const [editingPractice, setEditingPractice] =
+    useState<PracticeCategory | null>(null);
 
   const filteredPractices = practices.filter((practice) =>
     practice.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -57,24 +57,75 @@ const PracticeScreen: React.FC = () => {
     setSelectedCategoryId(null);
     setSearchQuery("");
   };
+
   const handleAddPractice = () => {
-    setIsAddModalVisible(true);
+    setEditingPractice(null);
+    setIsFormModalVisible(true);
   };
 
-  const handleSaveNewPractice = (name: string, description: string) => {
-    const newId =
-      practices.length > 0 ? Math.max(...practices.map((p) => p.id)) + 1 : 1; // Handle empty practices list
-    const newPractice: PracticeCategory = {
-      id: newId,
-      name: name,
-      description: description,
-    };
-    setPractices((prevPractices) => [...prevPractices, newPractice]);
-    setIsAddModalVisible(false); // Close modal after saving
+  // MODIFIED: handleEditPractice now directly accepts the ID
+  const handleEditPractice = (id: number) => {
+    const practiceToEdit = practices.find((p) => p.id === id);
+    if (practiceToEdit) {
+      setEditingPractice(practiceToEdit);
+      setIsFormModalVisible(true);
+    }
+  };
+
+  // Keep handleDeletePractice as is, it's called from modal now
+  const handleDeletePractice = (id: number, name: string) => {
+    Alert.alert(
+      "Delete Practice",
+      `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            setPractices((prevPractices) =>
+              prevPractices.filter((p) => p.id !== id)
+            );
+            // If the deleted category was the selected one, deselect it
+            if (selectedCategoryId === id) {
+              setSelectedCategoryId(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSavePractice = (
+    id: number | null,
+    name: string,
+    description: string
+  ) => {
+    if (id) {
+      setPractices((prevPractices) =>
+        prevPractices.map((p) =>
+          p.id === id ? { ...p, name: name, description: description } : p
+        )
+      );
+    } else {
+      const newId =
+        practices.length > 0 ? Math.max(...practices.map((p) => p.id)) + 1 : 1;
+      const newPractice: PracticeCategory = {
+        id: newId,
+        name: name,
+        description: description,
+      };
+      setPractices((prevPractices) => [...prevPractices, newPractice]);
+    }
+    setIsFormModalVisible(false);
+    setEditingPractice(null);
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "#f0f0f0" }}>
       <View style={{ flex: 1 }}>
         {selectedCategoryId === null ? (
           <View style={styles.practices_container}>
@@ -92,32 +143,33 @@ const PracticeScreen: React.FC = () => {
                 <Text style={styles.addButtonText}>+</Text>
               </Pressable>
             </View>
+
             <FlatList
               data={filteredPractices}
               keyExtractor={(item: PracticeCategory) => item.id.toString()}
               renderItem={({ item: practice }: { item: PracticeCategory }) => (
+                // Removed practiceItemContainer here, now PracticeCategoryModal handles the whole item styling
                 <Pressable
                   key={practice.id}
                   onPress={() => handleCategorySelect(practice.id)}
-                  style={{ marginBottom: 10 }}
+                  style={{ marginBottom: 10, alignItems: "center" }} // Center the modal
                 >
-                  <View style={styles.practice_category_container}>
-                    <PracticeCategoryModal
-                      name={practice.name}
-                      description={practice.description}
-                    />
-                  </View>
+                  <PracticeCategoryModal
+                    name={practice.name}
+                    description={practice.description}
+                    practiceId={practice.id} // Pass the ID
+                    onEdit={handleEditPractice} // Pass the edit callback
+                    onDelete={handleDeletePractice} // Pass the delete callback
+                  />
                 </Pressable>
               )}
               contentContainerStyle={styles.flatListContent}
-              // Added for debugging the FlatList itself
               ListEmptyComponent={() => (
                 <Text style={styles.noPracticesText}>No practices found.</Text>
               )}
             />
           </View>
         ) : (
-          // Render Drills List (conditionally visible)
           <View style={styles.drills_screen_container}>
             <Pressable
               onPress={handleBackToCategories}
@@ -158,10 +210,15 @@ const PracticeScreen: React.FC = () => {
           </View>
         )}
       </View>
-      <AddPracticeModal
-        visible={isAddModalVisible}
-        onClose={() => setIsAddModalVisible(false)} // Callback to close the modal
-        onSave={handleSaveNewPractice} // Callback to handle saving the new practice
+
+      <PracticeFormModal
+        visible={isFormModalVisible}
+        onClose={() => {
+          setIsFormModalVisible(false);
+          setEditingPractice(null);
+        }}
+        onSave={handleSavePractice}
+        initialPractice={editingPractice}
       />
     </View>
   );
@@ -196,7 +253,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EC1D25",
     width: 40,
     height: 40,
-    borderRadius: 20, // Makes it a circle
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -208,9 +265,11 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "white",
     fontSize: 24,
-    lineHeight: 24, // Adjust for vertical centering of '+'
+    lineHeight: 24,
     fontWeight: "bold",
   },
+  // REMOVED: practiceItemContainer, itemActions, actionButton, editButton, deleteButton, actionButtonText
+  // as these styles are now handled within PracticeCategoryModal
   drills_screen_container: {
     flex: 1,
     padding: 10,
@@ -260,6 +319,8 @@ const styles = StyleSheet.create({
   },
   practice_category_container: {
     alignItems: "center",
+    // This style was part of the old container, now it's only about aligning children
+    // The width comes from the PracticeCategoryModal itself
   },
   flatListContent: {
     paddingBottom: 20,
