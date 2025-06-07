@@ -30,6 +30,8 @@ interface DrillItem {
 
 const PracticeScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [drillSearchQuery, setDrillSearchQuery] = useState("");
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     null
   );
@@ -45,17 +47,31 @@ const PracticeScreen: React.FC = () => {
     practice.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredDrills = selectedCategoryId
+  // Filter drills first by category, then by drill search query
+  const drillsForSelectedCategory = selectedCategoryId
     ? drills_list.filter((drill) => drill.from_id === selectedCategoryId)
     : [];
 
+  const filteredDrills = drillsForSelectedCategory.filter(
+    (drill) =>
+      drill.name.toLowerCase().includes(drillSearchQuery.toLowerCase()) ||
+      drill.description
+        .toLowerCase()
+        .includes(drillSearchQuery.toLowerCase()) ||
+      drill.steps.some((step) =>
+        step.toLowerCase().includes(drillSearchQuery.toLowerCase())
+      )
+  );
+
   const handleCategorySelect = (id: number) => {
     setSelectedCategoryId(id);
+    setDrillSearchQuery(""); // Clear drill search when changing category
   };
 
   const handleBackToCategories = () => {
     setSelectedCategoryId(null);
     setSearchQuery("");
+    setDrillSearchQuery("");
   };
 
   const handleAddPractice = () => {
@@ -63,7 +79,6 @@ const PracticeScreen: React.FC = () => {
     setIsFormModalVisible(true);
   };
 
-  // MODIFIED: handleEditPractice now directly accepts the ID
   const handleEditPractice = (id: number) => {
     const practiceToEdit = practices.find((p) => p.id === id);
     if (practiceToEdit) {
@@ -72,7 +87,6 @@ const PracticeScreen: React.FC = () => {
     }
   };
 
-  // Keep handleDeletePractice as is, it's called from modal now
   const handleDeletePractice = (id: number, name: string) => {
     Alert.alert(
       "Delete Practice",
@@ -89,9 +103,8 @@ const PracticeScreen: React.FC = () => {
             setPractices((prevPractices) =>
               prevPractices.filter((p) => p.id !== id)
             );
-            // If the deleted category was the selected one, deselect it
             if (selectedCategoryId === id) {
-              setSelectedCategoryId(null);
+              setSelectedCategoryId(null); // Deselect if current category is deleted
             }
           },
         },
@@ -148,18 +161,17 @@ const PracticeScreen: React.FC = () => {
               data={filteredPractices}
               keyExtractor={(item: PracticeCategory) => item.id.toString()}
               renderItem={({ item: practice }: { item: PracticeCategory }) => (
-                // Removed practiceItemContainer here, now PracticeCategoryModal handles the whole item styling
                 <Pressable
                   key={practice.id}
                   onPress={() => handleCategorySelect(practice.id)}
-                  style={{ marginBottom: 10, alignItems: "center" }} // Center the modal
+                  style={{ marginBottom: 10, alignItems: "center" }}
                 >
                   <PracticeCategoryModal
                     name={practice.name}
                     description={practice.description}
-                    practiceId={practice.id} // Pass the ID
-                    onEdit={handleEditPractice} // Pass the edit callback
-                    onDelete={handleDeletePractice} // Pass the delete callback
+                    practiceId={practice.id}
+                    onEdit={handleEditPractice}
+                    onDelete={handleDeletePractice}
                   />
                 </Pressable>
               )}
@@ -179,6 +191,17 @@ const PracticeScreen: React.FC = () => {
                 {"<- Back to Categories"}
               </Text>
             </Pressable>
+
+            <TextInput
+              style={styles.search_input}
+              placeholder="Search drills"
+              value={drillSearchQuery}
+              onChangeText={(text) => setDrillSearchQuery(text)}
+            />
+            <Text style={styles.drillsCountText}>
+              Drills: {filteredDrills.length}
+            </Text>
+
             {filteredDrills.length > 0 ? (
               <FlatList
                 data={filteredDrills}
@@ -204,7 +227,7 @@ const PracticeScreen: React.FC = () => {
               />
             ) : (
               <Text style={styles.noDrillsText}>
-                No drills found for this category.
+                No drills found for this category or search.
               </Text>
             )}
           </View>
@@ -249,6 +272,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555",
   },
+  drillsCountText: {
+    fontSize: 16,
+    color: "#555",
+    marginBottom: 10,
+  },
   addButton: {
     backgroundColor: "#EC1D25",
     width: 40,
@@ -268,8 +296,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontWeight: "bold",
   },
-  // REMOVED: practiceItemContainer, itemActions, actionButton, editButton, deleteButton, actionButtonText
-  // as these styles are now handled within PracticeCategoryModal
   drills_screen_container: {
     flex: 1,
     padding: 10,
@@ -319,8 +345,6 @@ const styles = StyleSheet.create({
   },
   practice_category_container: {
     alignItems: "center",
-    // This style was part of the old container, now it's only about aligning children
-    // The width comes from the PracticeCategoryModal itself
   },
   flatListContent: {
     paddingBottom: 20,
