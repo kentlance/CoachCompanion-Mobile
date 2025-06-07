@@ -1,230 +1,434 @@
 // app/performance_practice/performance/team_performance.tsx
+import { Stack } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import game_record_data from "./game_records"; // Import the game records data
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import { LineChart, ProgressChart } from "react-native-chart-kit";
 
-// Define a type for aggregated team stats
-interface TeamStats {
-  gameIds: any;
-  gamesPlayed: number;
+import game_record_data from "./game_records";
+
+const screenWidth = Dimensions.get("window").width;
+const CHART_GAMES_LIMIT = 5; // Limit charts to the most recent 5 games
+
+// Define an interface for aggregated team game data
+interface TeamGameStats {
+  game_id: number;
   totalPoints: number;
-  totalMadeFG: number;
-  totalAttemptFG: number;
-  totalMade2PTS: number;
-  totalAttempt2PTS: number;
-  totalMade3PTS: number;
-  totalAttempt3PTS: number;
-  totalMadeFT: number;
-  totalAttemptFT: number;
-  totalOffRebound: number;
-  totalDefRebound: number;
+  totalRebounds: number;
   totalAssists: number;
   totalSteals: number;
   totalBlocks: number;
   totalTurnovers: number;
   totalFouls: number;
+  madeFG: number;
+  attemptFG: number;
+  made3PTS: number;
+  attempt3PTS: number;
+  madeFT: number;
+  attemptFT: number;
 }
 
-export default function TeamPerformance() {
-  const [teamStats, setTeamStats] = useState<TeamStats | null>(null);
+export default function TeamPerformanceScreen() {
+  const [teamGameStats, setTeamGameStats] = useState<TeamGameStats[]>([]);
+  const [overallTeamStats, setOverallTeamStats] = useState({
+    totalGames: 0,
+    totalPoints: 0,
+    totalRebounds: 0,
+    totalAssists: 0,
+    totalSteals: 0,
+    totalBlocks: 0,
+    totalTurnovers: 0,
+    totalFouls: 0,
+    totalMadeFG: 0,
+    totalAttemptFG: 0,
+    totalMade3PTS: 0,
+    totalAttempt3PTS: 0,
+    totalMadeFT: 0,
+    totalAttemptFT: 0,
+  });
 
   useEffect(() => {
-    if (game_record_data.length === 0) {
-      setTeamStats(null);
-      return;
-    }
+    // Aggregate data by game_id
+    const aggregatedGames: { [key: number]: TeamGameStats } = {};
 
-    const aggregatedStats: TeamStats = game_record_data.reduce(
-      (
-        acc: {
-          gameIds: { has: (arg0: any) => any; add: (arg0: any) => void };
-          gamesPlayed: number;
-          totalPoints: any;
-          totalMadeFG: any;
-          totalAttemptFG: any;
-          totalMade2PTS: any;
-          totalAttempt2PTS: any;
-          totalMade3PTS: any;
-          totalAttempt3PTS: any;
-          totalMadeFT: any;
-          totalAttemptFT: any;
-          totalOffRebound: any;
-          totalDefRebound: any;
-          totalAssists: any;
-          totalSteals: any;
-          totalBlocks: any;
-          totalTurnovers: any;
-          totalFouls: any;
-        },
-        record: {
-          game_id: any;
-          points: any;
-          madeFG: any;
-          attemptFG: any;
-          made2PTS: any;
-          attempt2PTS: any;
-          made3PTS: any;
-          attempt3PTS: any;
-          madeFT: any;
-          attemptFT: any;
-          offRebound: any;
-          defRebound: any;
-          assists: any;
-          steals: any;
-          blocks: any;
-          turnovers: any;
-          fouls: any;
-        }
-      ) => {
-        // Track unique game IDs to count total games played
-        if (!acc.gameIds.has(record.game_id)) {
-          acc.gameIds.add(record.game_id);
-        }
+    game_record_data.forEach((record) => {
+      if (!aggregatedGames[record.game_id]) {
+        aggregatedGames[record.game_id] = {
+          game_id: record.game_id,
+          totalPoints: 0,
+          totalRebounds: 0,
+          totalAssists: 0,
+          totalSteals: 0,
+          totalBlocks: 0,
+          totalTurnovers: 0,
+          totalFouls: 0,
+          madeFG: 0,
+          attemptFG: 0,
+          made3PTS: 0,
+          attempt3PTS: 0,
+          madeFT: 0,
+          attemptFT: 0,
+        };
+      }
+      const game = aggregatedGames[record.game_id];
+      game.totalPoints += record.points;
+      game.totalRebounds += record.offRebound + record.defRebound;
+      game.totalAssists += record.assists;
+      game.totalSteals += record.steals;
+      game.totalBlocks += record.blocks;
+      game.totalTurnovers += record.turnovers;
+      game.totalFouls += record.fouls;
+      game.madeFG += record.madeFG;
+      game.attemptFG += record.attemptFG;
+      game.made3PTS += record.made3PTS;
+      game.attempt3PTS += record.attempt3PTS;
+      game.madeFT += record.madeFT;
+      game.attemptFT += record.attemptFT;
+    });
 
-        acc.totalPoints += record.points;
-        acc.totalMadeFG += record.madeFG;
-        acc.totalAttemptFG += record.attemptFG;
-        acc.totalMade2PTS += record.made2PTS;
-        acc.totalAttempt2PTS += record.attempt2PTS;
-        acc.totalMade3PTS += record.made3PTS;
-        acc.totalAttempt3PTS += record.attempt3PTS;
-        acc.totalMadeFT += record.madeFT;
-        acc.totalAttemptFT += record.attemptFT;
-        acc.totalOffRebound += record.offRebound;
-        acc.totalDefRebound += record.defRebound;
-        acc.totalAssists += record.assists;
-        acc.totalSteals += record.steals;
-        acc.totalBlocks += record.blocks;
-        acc.totalTurnovers += record.turnovers;
-        acc.totalFouls += record.fouls;
+    const sortedTeamGames = Object.values(aggregatedGames).sort(
+      (a, b) => b.game_id - a.game_id
+    ); // Sort by most recent game
+    setTeamGameStats(sortedTeamGames);
 
+    // Calculate overall team stats
+    const overallStats = sortedTeamGames.reduce(
+      (acc, game) => {
+        acc.totalPoints += game.totalPoints;
+        acc.totalRebounds += game.totalRebounds;
+        acc.totalAssists += game.totalAssists;
+        acc.totalSteals += game.totalSteals;
+        acc.totalBlocks += game.totalBlocks;
+        acc.totalTurnovers += game.totalTurnovers;
+        acc.totalFouls += game.totalFouls;
+        acc.totalMadeFG += game.madeFG;
+        acc.totalAttemptFG += game.attemptFG;
+        acc.totalMade3PTS += game.made3PTS;
+        acc.totalAttempt3PTS += game.attempt3PTS;
+        acc.totalMadeFT += game.madeFT;
+        acc.totalAttemptFT += game.attemptFT;
         return acc;
       },
       {
-        gameIds: new Set<number>(), // Use a Set to count unique games
+        totalGames: sortedTeamGames.length,
         totalPoints: 0,
-        totalMadeFG: 0,
-        totalAttemptFG: 0,
-        totalMade2PTS: 0,
-        totalAttempt2PTS: 0,
-        totalMade3PTS: 0,
-        totalAttempt3PTS: 0,
-        totalMadeFT: 0,
-        totalAttemptFT: 0,
-        totalOffRebound: 0,
-        totalDefRebound: 0,
+        totalRebounds: 0,
         totalAssists: 0,
         totalSteals: 0,
         totalBlocks: 0,
         totalTurnovers: 0,
         totalFouls: 0,
-      } as TeamStats & { gameIds: Set<number> } // Cast for initial accumulator type
+        totalMadeFG: 0,
+        totalAttemptFG: 0,
+        totalMade3PTS: 0,
+        totalAttempt3PTS: 0,
+        totalMadeFT: 0,
+        totalAttemptFT: 0,
+      }
     );
-
-    setTeamStats({
-      ...aggregatedStats,
-      gamesPlayed: aggregatedStats.gameIds.size, // Get the count of unique games
-    });
+    setOverallTeamStats(overallStats);
   }, []);
 
-  const calculatePercentage = (made: number, attempt: number) => {
-    return attempt > 0 ? ((made / attempt) * 100).toFixed(1) : "0.0";
+  const getTeamStatLineChartData = (
+    statKey: keyof TeamGameStats,
+    title: string
+  ) => {
+    // Get the most recent games, then reverse them for chronological display on the chart
+    const recordsToChart = teamGameStats.slice(0, CHART_GAMES_LIMIT).reverse();
+
+    const labels = recordsToChart.map((record) => `Game ${record.game_id}`);
+    const data = recordsToChart.map((record) => record[statKey] as number);
+
+    return {
+      labels: labels,
+      datasets: [
+        {
+          data: data,
+          color: (opacity = 1) => `rgba(236, 29, 37, ${opacity})`,
+          strokeWidth: 2,
+        },
+      ],
+      title: title,
+    };
   };
 
-  if (!teamStats) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.noDataText}>
-          No game records available for team performance.
-        </Text>
-      </View>
-    );
-  }
+  const getTeamShootingPercentagesData = () => {
+    if (overallTeamStats.totalGames === 0) {
+      return {
+        labels: ["FG%", "3PT%", "FT%"],
+        data: [0, 0, 0],
+      };
+    }
+
+    const fgPercent =
+      overallTeamStats.totalAttemptFG > 0
+        ? overallTeamStats.totalMadeFG / overallTeamStats.totalAttemptFG
+        : 0;
+    const threePtPercent =
+      overallTeamStats.totalAttempt3PTS > 0
+        ? overallTeamStats.totalMade3PTS / overallTeamStats.totalAttempt3PTS
+        : 0;
+    const ftPercent =
+      overallTeamStats.totalAttemptFT > 0
+        ? overallTeamStats.totalMadeFT / overallTeamStats.totalAttemptFT
+        : 0;
+
+    return {
+      labels: ["FG%", "3PT%", "FT%"],
+      data: [fgPercent, threePtPercent, ftPercent],
+    };
+  };
+
+  const chartConfig = {
+    backgroundColor: "#e26a00",
+    backgroundGradientFrom: "#fefefe",
+    backgroundGradientTo: "#ffffff",
+    decimalPlaces: 0, // Default to 0 decimal places for counting stats
+    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    style: {
+      borderRadius: 16,
+    },
+    propsForDots: {
+      r: "6",
+      strokeWidth: "2",
+      stroke: "#EC1D25",
+    },
+    fillShadowGradientFrom: "#EC1D25",
+    fillShadowGradientTo: "#FFFFFF",
+    fillShadowGradientFromOpacity: 0.5,
+    fillShadowGradientToOpacity: 0.1,
+  };
+
+  const calculatePercentage = (made: number, attempt: number) => {
+    return attempt > 0 ? ((made / attempt) * 100).toFixed(2) : "0.00";
+  };
+
+  const actualGamesCharted = Math.min(teamGameStats.length, CHART_GAMES_LIMIT);
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Team Performance Summary</Text>
+      <Stack.Screen options={{ headerTitle: "Team Performance" }} />
 
-      <View style={styles.statsCard}>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Games Played:</Text>
-          <Text style={styles.statValue}>{teamStats.gamesPlayed}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Total Points:</Text>
-          <Text style={styles.statValue}>{teamStats.totalPoints}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Total Rebounds:</Text>
-          <Text style={styles.statValue}>
-            {teamStats.totalOffRebound + teamStats.totalDefRebound}
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Total Assists:</Text>
-          <Text style={styles.statValue}>{teamStats.totalAssists}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Total Steals:</Text>
-          <Text style={styles.statValue}>{teamStats.totalSteals}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Total Blocks:</Text>
-          <Text style={styles.statValue}>{teamStats.totalBlocks}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Total Turnovers:</Text>
-          <Text style={styles.statValue}>{teamStats.totalTurnovers}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Total Fouls:</Text>
-          <Text style={styles.statValue}>{teamStats.totalFouls}</Text>
-        </View>
-      </View>
+      <Text style={styles.header}>Overall Team Performance</Text>
 
-      <Text style={styles.sectionTitle}>Shooting Percentages</Text>
-      <View style={styles.statsCard}>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Field Goal %:</Text>
-          <Text style={styles.statValue}>
-            {calculatePercentage(
-              teamStats.totalMadeFG,
-              teamStats.totalAttemptFG
-            )}
-            %
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>2-Point %:</Text>
-          <Text style={styles.statValue}>
-            {calculatePercentage(
-              teamStats.totalMade2PTS,
-              teamStats.totalAttempt2PTS
-            )}
-            %
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>3-Point %:</Text>
-          <Text style={styles.statValue}>
-            {calculatePercentage(
-              teamStats.totalMade3PTS,
-              teamStats.totalAttempt3PTS
-            )}
-            %
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Free Throw %:</Text>
-          <Text style={styles.statValue}>
-            {calculatePercentage(
-              teamStats.totalMadeFT,
-              teamStats.totalAttemptFT
-            )}
-            %
-          </Text>
-        </View>
-      </View>
+      {overallTeamStats.totalGames === 0 ? (
+        <Text style={styles.noDataText}>
+          No game records available for the team.
+        </Text>
+      ) : (
+        <>
+          <View style={styles.statsCard}>
+            <Text style={styles.sectionTitle}>
+              Aggregated Team Stats ({overallTeamStats.totalGames} Games)
+            </Text>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Points:</Text>
+              <Text style={styles.statValue}>
+                {overallTeamStats.totalPoints}
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Rebounds:</Text>
+              <Text style={styles.statValue}>
+                {overallTeamStats.totalRebounds}
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Assists:</Text>
+              <Text style={styles.statValue}>
+                {overallTeamStats.totalAssists}
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Steals:</Text>
+              <Text style={styles.statValue}>
+                {overallTeamStats.totalSteals}
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Blocks:</Text>
+              <Text style={styles.statValue}>
+                {overallTeamStats.totalBlocks}
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Turnovers:</Text>
+              <Text style={styles.statValue}>
+                {overallTeamStats.totalTurnovers}
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Fouls:</Text>
+              <Text style={styles.statValue}>
+                {overallTeamStats.totalFouls}
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>FG%:</Text>
+              <Text style={styles.statValue}>
+                {calculatePercentage(
+                  overallTeamStats.totalMadeFG,
+                  overallTeamStats.totalAttemptFG
+                )}
+                %
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>3PT%:</Text>
+              <Text style={styles.statValue}>
+                {calculatePercentage(
+                  overallTeamStats.totalMade3PTS,
+                  overallTeamStats.totalAttempt3PTS
+                )}
+                %
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>FT%:</Text>
+              <Text style={styles.statValue}>
+                {calculatePercentage(
+                  overallTeamStats.totalMadeFT,
+                  overallTeamStats.totalAttemptFT
+                )}
+                %
+              </Text>
+            </View>
+          </View>
+
+          {/* Team Stat Line Charts */}
+          {actualGamesCharted > 1 && (
+            <>
+              <View style={styles.chartContainer}>
+                <Text style={styles.chartTitle}>
+                  Team Points Per Game (Last {actualGamesCharted})
+                </Text>
+                <LineChart
+                  data={getTeamStatLineChartData("totalPoints", "Team Points")}
+                  width={screenWidth - 30}
+                  height={220}
+                  chartConfig={chartConfig}
+                  bezier
+                  style={styles.chartStyle}
+                />
+              </View>
+
+              <View style={styles.chartContainer}>
+                <Text style={styles.chartTitle}>
+                  Team Rebounds Per Game (Last {actualGamesCharted})
+                </Text>
+                <LineChart
+                  data={getTeamStatLineChartData(
+                    "totalRebounds",
+                    "Team Rebounds"
+                  )}
+                  width={screenWidth - 30}
+                  height={220}
+                  chartConfig={chartConfig}
+                  bezier
+                  style={styles.chartStyle}
+                />
+              </View>
+
+              <View style={styles.chartContainer}>
+                <Text style={styles.chartTitle}>
+                  Team Assists Per Game (Last {actualGamesCharted})
+                </Text>
+                <LineChart
+                  data={getTeamStatLineChartData(
+                    "totalAssists",
+                    "Team Assists"
+                  )}
+                  width={screenWidth - 30}
+                  height={220}
+                  chartConfig={chartConfig}
+                  bezier
+                  style={styles.chartStyle}
+                />
+              </View>
+
+              <View style={styles.chartContainer}>
+                <Text style={styles.chartTitle}>
+                  Team Steals Per Game (Last {actualGamesCharted})
+                </Text>
+                <LineChart
+                  data={getTeamStatLineChartData("totalSteals", "Team Steals")}
+                  width={screenWidth - 30}
+                  height={220}
+                  chartConfig={chartConfig}
+                  bezier
+                  style={styles.chartStyle}
+                />
+              </View>
+
+              <View style={styles.chartContainer}>
+                <Text style={styles.chartTitle}>
+                  Team Blocks Per Game (Last {actualGamesCharted})
+                </Text>
+                <LineChart
+                  data={getTeamStatLineChartData("totalBlocks", "Team Blocks")}
+                  width={screenWidth - 30}
+                  height={220}
+                  chartConfig={chartConfig}
+                  bezier
+                  style={styles.chartStyle}
+                />
+              </View>
+
+              <View style={styles.chartContainer}>
+                <Text style={styles.chartTitle}>
+                  Team Turnovers Per Game (Last {actualGamesCharted})
+                </Text>
+                <LineChart
+                  data={getTeamStatLineChartData(
+                    "totalTurnovers",
+                    "Team Turnovers"
+                  )}
+                  width={screenWidth - 30}
+                  height={220}
+                  chartConfig={chartConfig}
+                  bezier
+                  style={styles.chartStyle}
+                />
+              </View>
+
+              <View style={styles.chartContainer}>
+                <Text style={styles.chartTitle}>
+                  Team Fouls Per Game (Last {actualGamesCharted})
+                </Text>
+                <LineChart
+                  data={getTeamStatLineChartData("totalFouls", "Team Fouls")}
+                  width={screenWidth - 30}
+                  height={220}
+                  chartConfig={chartConfig}
+                  bezier
+                  style={styles.chartStyle}
+                />
+              </View>
+            </>
+          )}
+
+          {/* Overall Team Shooting Percentages Progress Chart */}
+          {overallTeamStats.totalGames > 0 && (
+            <View style={styles.chartContainer}>
+              <Text style={styles.chartTitle}>
+                Overall Team Shooting Efficiency
+              </Text>
+              <ProgressChart
+                data={getTeamShootingPercentagesData()}
+                width={screenWidth - 30}
+                height={220}
+                chartConfig={{
+                  ...chartConfig,
+                  decimalPlaces: 2, // Ensure 2 decimal places for percentages
+                  color: (opacity = 1) => `rgba(236, 29, 37, ${opacity})`,
+                }}
+                hideLegend={false}
+                style={styles.chartStyle}
+              />
+            </View>
+          )}
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -235,8 +439,8 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: "#f9f9f9",
   },
-  title: {
-    fontSize: 24,
+  header: {
+    fontSize: 28,
     fontWeight: "bold",
     marginBottom: 20,
     color: "#333",
@@ -245,7 +449,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    marginTop: 20,
     marginBottom: 10,
     color: "#555",
     borderBottomWidth: 1,
@@ -256,7 +459,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 15,
-    marginBottom: 15,
+    marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
@@ -274,19 +477,34 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 16,
     color: "#666",
-    flex: 2, // Take more space for label
+    flex: 2,
   },
   statValue: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    flex: 1, // Less space for value
-    textAlign: "right", // Align value to the right
+    flex: 1,
+    textAlign: "right",
   },
   noDataText: {
     fontSize: 16,
     color: "#888",
     textAlign: "center",
     marginTop: 50,
+  },
+  chartContainer: {
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+    textAlign: "center",
+  },
+  chartStyle: {
+    marginVertical: 8,
+    borderRadius: 16,
   },
 });
