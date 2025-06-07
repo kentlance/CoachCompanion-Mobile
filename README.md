@@ -1,11 +1,13 @@
 # CoachCompanion
 
 ## Features
-- Athlete Management
+- Athlete Management & Monitoring
   - Manage your athlete details
-- Athlete Game Performance
-  - View athletes and team performances in various game matches
-- Athlete Trainings and Exercises (My assigned module)
+  - Manage game records
+- Athlete Game Performance & Practice (My assigned module)
+  - View athletes and team performances
+  - Manage practices and drills
+- Athlete Trainings and Exercises
   - Generate athlete-specific trainings and exercises
   - Manage trainings and exercises
  
