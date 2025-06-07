@@ -20,6 +20,12 @@ export default function PerformanceLayout() {
           headerTitle: "Athlete Details", // Default title, can be overridden
         }}
       />
+      <Stack.Screen
+        name="team_performance"
+        options={{
+          headerTitle: "Team Performance",
+        }}
+      />
     </Stack>
   );
 }

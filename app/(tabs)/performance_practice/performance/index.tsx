@@ -1,5 +1,5 @@
 // app/performance_practice/performance/index.tsx
-import { RelativePathString, useRouter } from "expo-router"; // To navigate to athlete_overall_view
+import { useRouter } from "expo-router"; // To navigate
 import React, { useState } from "react";
 import {
   FlatList,
@@ -9,9 +9,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import AthleteCard from "./athlete_card";
-import athlete_list from "./athlete_list";
-import { Athlete } from "./interfaces";
+import AthleteModal from "./athlete_card"; // Your Athlete "Card"
+import athlete_list from "./athlete_list"; // Your athlete data
+import { Athlete } from "./interfaces"; // Import Athlete interface
+// No explicit import of TeamPerformance here if navigating to a separate route
 
 export default function PerformanceScreen() {
   const router = useRouter();
@@ -20,32 +21,27 @@ export default function PerformanceScreen() {
   const filteredAthletes = athlete_list.filter(
     (athlete) =>
       athlete.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      athlete.number.includes(searchQuery) // Search by jersey number too
+      athlete.number.includes(searchQuery)
   );
 
   const handleAthletePress = (athleteId: number) => {
-    const path = `/performance_practice/performance/${athleteId}`;
-    router.push(path as RelativePathString);
+    router.push(`/performance_practice/performance/${athleteId}`);
   };
 
-  // Placeholder for Team Performance Summary
-  const TeamPerformanceSummary = () => (
-    <Pressable
-      style={styles.teamSummaryButton}
-      onPress={() => {
-        // Future logic for team performance summary
-        console.log("Team Performance Summary clicked!");
-        alert("Team Performance Summary - Coming Soon!");
-      }}
-    >
-      <Text style={styles.teamSummaryButtonText}>View Team Performance</Text>
-    </Pressable>
-  );
+  // Handler for Team Performance button
+  const handleTeamPerformancePress = () => {
+    router.push(`/performance_practice/performance/team_performance`);
+  };
 
   return (
     <View style={styles.container}>
       {/* Team Performance Summary Section */}
-      <TeamPerformanceSummary />
+      <Pressable
+        style={styles.teamSummaryButton}
+        onPress={handleTeamPerformancePress}
+      >
+        <Text style={styles.teamSummaryButtonText}>View Team Performance</Text>
+      </Pressable>
 
       {/* Search Bar for Athletes */}
       <TextInput
@@ -73,7 +69,7 @@ export default function PerformanceScreen() {
               onPress={() => handleAthletePress(athlete.id)}
               style={styles.athleteCardPressable}
             >
-              <AthleteCard athlete={athlete} />
+              <AthleteModal athlete={athlete} />
             </Pressable>
           )}
           contentContainerStyle={styles.flatListContent}
