@@ -5,7 +5,7 @@
   - Manage your athlete details
 - Athlete Game Performance
   - View athletes and team performances in various game matches
-- Athlete Trainings and Exercises
+- Athlete Trainings and Exercises (My assigned module)
   - Generate athlete-specific trainings and exercises
   - Manage trainings and exercises
  
