@@ -16,7 +16,7 @@ const SEPARATOR_MARGIN = width * 0.03; // Margin for the "|" separator
 
 export default function PerformancePracticeLayout() {
   const segments = useSegments();
-  const currentTab = segments[segments.length - 1];
+  const currentTab = segments[segments.length - 1] || "practice";
 
   return (
     // Outer View to ensure content takes full screen height and a base background
@@ -101,7 +101,7 @@ export default function PerformancePracticeLayout() {
         </View>
       </SafeAreaView>
 
-      {/* This View now directly handles the Slot content and ensures it takes remaining height */}
+      {/* This View directly handles the Slot content and ensures it takes remaining height */}
       <View style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
         <Slot />
       </View>
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   },
   // Base text style for any tab label
   tabLabel: {
-    color: "#333", // Default dark text color
+    color: "#333",
     fontWeight: "bold",
   },
   // Specific style for the text of the selected tab

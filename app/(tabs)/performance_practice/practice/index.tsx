@@ -8,11 +8,12 @@ import {
   TextInput,
   View,
 } from "react-native";
+import AddPracticeModal from "./add_practice_modal";
 import drills_list from "./drills_list"; // drills data
-import practices_list from "./practices"; // categories data
+import practices_list_initial from "./practices"; // categories data
 import PracticeCategoryModal from "./practice_category_modal"; // Your category display component
 
-// Define interfaces for your data (keep these as they are)
+// Define interfaces for your data
 interface PracticeCategory {
   id: number;
   name: string;
@@ -33,7 +34,14 @@ const PracticeScreen: React.FC = () => {
     null
   );
 
-  const filteredPractices = practices_list.filter((practice) =>
+  // Manage practices list
+  const [practices, setPractices] = useState<PracticeCategory[]>(
+    practices_list_initial
+  );
+
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+
+  const filteredPractices = practices.filter((practice) =>
     practice.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -49,6 +57,21 @@ const PracticeScreen: React.FC = () => {
     setSelectedCategoryId(null);
     setSearchQuery("");
   };
+  const handleAddPractice = () => {
+    setIsAddModalVisible(true);
+  };
+
+  const handleSaveNewPractice = (name: string, description: string) => {
+    const newId =
+      practices.length > 0 ? Math.max(...practices.map((p) => p.id)) + 1 : 1; // Handle empty practices list
+    const newPractice: PracticeCategory = {
+      id: newId,
+      name: name,
+      description: description,
+    };
+    setPractices((prevPractices) => [...prevPractices, newPractice]);
+    setIsAddModalVisible(false); // Close modal after saving
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -61,6 +84,14 @@ const PracticeScreen: React.FC = () => {
               value={searchQuery}
               onChangeText={(text) => setSearchQuery(text)}
             />
+            <View style={styles.headerControls}>
+              <Text style={styles.practicesCountText}>
+                Practices: {filteredPractices.length}
+              </Text>
+              <Pressable onPress={handleAddPractice} style={styles.addButton}>
+                <Text style={styles.addButtonText}>+</Text>
+              </Pressable>
+            </View>
             <FlatList
               data={filteredPractices}
               keyExtractor={(item: PracticeCategory) => item.id.toString()}
@@ -68,7 +99,7 @@ const PracticeScreen: React.FC = () => {
                 <Pressable
                   key={practice.id}
                   onPress={() => handleCategorySelect(practice.id)}
-                  style={{ marginBottom: 10 }} // Add some margin for visual separation
+                  style={{ marginBottom: 10 }}
                 >
                   <View style={styles.practice_category_container}>
                     <PracticeCategoryModal
@@ -81,7 +112,7 @@ const PracticeScreen: React.FC = () => {
               contentContainerStyle={styles.flatListContent}
               // Added for debugging the FlatList itself
               ListEmptyComponent={() => (
-                <Text style={styles.noDrillsText}>No practices found.</Text>
+                <Text style={styles.noPracticesText}>No practices found.</Text>
               )}
             />
           </View>
@@ -127,6 +158,11 @@ const PracticeScreen: React.FC = () => {
           </View>
         )}
       </View>
+      <AddPracticeModal
+        visible={isAddModalVisible}
+        onClose={() => setIsAddModalVisible(false)} // Callback to close the modal
+        onSave={handleSaveNewPractice} // Callback to handle saving the new practice
+      />
     </View>
   );
 };
@@ -146,6 +182,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 10,
   },
+  headerControls: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  practicesCountText: {
+    fontSize: 16,
+    color: "#555",
+  },
+  addButton: {
+    backgroundColor: "#EC1D25",
+    width: 40,
+    height: 40,
+    borderRadius: 20, // Makes it a circle
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  addButtonText: {
+    color: "white",
+    fontSize: 24,
+    lineHeight: 24, // Adjust for vertical centering of '+'
+    fontWeight: "bold",
+  },
   drills_screen_container: {
     flex: 1,
     padding: 10,
@@ -157,7 +222,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: "#007AFF",
+    color: "#EC1D25",
     fontWeight: "bold",
   },
   drill_container: {
@@ -200,6 +265,12 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   noDrillsText: {
+    fontSize: 16,
+    color: "#888",
+    textAlign: "center",
+    marginTop: 20,
+  },
+  noPracticesText: {
     fontSize: 16,
     color: "#888",
     textAlign: "center",
