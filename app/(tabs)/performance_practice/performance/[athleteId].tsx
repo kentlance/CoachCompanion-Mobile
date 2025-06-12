@@ -1,7 +1,17 @@
 // app/performance_practice/performance/[athleteId].tsx
 import { Stack, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Dimensions,
+  FlatList,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { LineChart, ProgressChart } from "react-native-chart-kit";
 
 import athlete_list from "./athlete_list";
@@ -17,6 +27,11 @@ export default function AthleteDetailScreen() {
   const [athleteGameRecords, setAthleteGameRecords] = useState<GameRecord[]>(
     []
   );
+  // State to hold the currently selected game for detailed view
+  const [selectedGame, setSelectedGame] = useState<GameRecord | null>(null);
+  // state for modal visibility of specific game selection
+  const [isGameSelectionModalVisible, setIsGameSelectionModalVisible] =
+    useState(false);
 
   useEffect(() => {
     if (athleteId) {
@@ -27,8 +42,16 @@ export default function AthleteDetailScreen() {
       const records = game_record_data.filter(
         (record) => record.player_id === id
       );
-      // Sort by most recent game (descending game_id) first, then slice
-      setAthleteGameRecords(records.sort((a, b) => b.game_id - a.game_id));
+      // Sort by most recent game (descending game_id)
+      const sortedRecords = records.sort((a, b) => b.game_id - a.game_id);
+      setAthleteGameRecords(sortedRecords);
+
+      // Set the most recent game as the default selected game
+      if (sortedRecords.length > 0) {
+        setSelectedGame(sortedRecords[0]);
+      } else {
+        setSelectedGame(null);
+      }
     }
   }, [athleteId]);
 
@@ -38,7 +61,7 @@ export default function AthleteDetailScreen() {
       .slice(0, CHART_GAMES_LIMIT)
       .reverse();
 
-    // Generate labels: "Game 1", "Game 2", etc. based on their order in the *sliced and reversed* array
+    // Generate labels: "Game 1", "Game 2", etc. based on their order in the array
     const labels = recordsToChart.map((_, index) => `Game ${index + 1}`);
     const data = recordsToChart.map((record) => record[statKey] as number);
 
@@ -142,7 +165,6 @@ export default function AthleteDetailScreen() {
     fillShadowGradientFromOpacity: 0.5,
     fillShadowGradientToOpacity: 0.1,
   };
-
   if (!athlete) {
     return (
       <View style={styles.container}>
@@ -209,6 +231,22 @@ export default function AthleteDetailScreen() {
   const actualGamesCharted = Math.min(
     athleteGameRecords.length,
     CHART_GAMES_LIMIT
+  );
+
+  // Render function for each game item in the FlatList
+  const renderGameItem = ({ item }: { item: GameRecord }) => (
+    <TouchableOpacity
+      style={styles.gameItem}
+      onPress={() => {
+        setSelectedGame(item);
+        setIsGameSelectionModalVisible(false); // Close modal on selection
+      }}
+    >
+      <Text style={styles.gameItemText}>
+        {/* (vs {item.opponent}, {item.game_date}) could be added, check Piad's module */}
+        Game {item.game_id}
+      </Text>
+    </TouchableOpacity>
   );
 
   return (
@@ -279,7 +317,144 @@ export default function AthleteDetailScreen() {
             </View>
           </View>
 
-          {/* --- Individual Stat Line Charts --- */}
+          {/*  Stats for Specific Game Section (MODAL IMPLEMENTATION) */}
+          {totalGamesPlayed > 0 && (
+            <View style={styles.statsCard}>
+              <Text style={styles.sectionTitle}>Stats for Specific Game</Text>
+              <Text style={styles.subTitle}>Currently Viewing:</Text>
+              <TouchableOpacity
+                style={styles.selectGameButton}
+                onPress={() => setIsGameSelectionModalVisible(true)}
+              >
+                <Text style={styles.selectGameButtonText}>
+                  {selectedGame
+                    ? // (vs ${selectedGame.opponent}, ${selectedGame.game_date}) could be added
+                      `Game ${selectedGame.game_id}`
+                    : "Select a Game"}
+                </Text>
+              </TouchableOpacity>
+
+              {selectedGame ? (
+                <View style={styles.specificGameStats}>
+                  <Text style={styles.gameDetailHeader}>
+                    Game ID: {selectedGame.game_id}
+                  </Text>
+                  {/* removed for now, could be added later
+                  <Text style={styles.gameDetailHeader}>
+                    Opponent: {selectedGame.opponent}
+                  </Text>
+                  <Text style={styles.gameDetailHeader}>
+                    Date: {selectedGame.game_date}
+                  </Text>
+                   */}
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>Points:</Text>
+                    <Text style={styles.statValue}>{selectedGame.points}</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>Total Rebounds:</Text>
+                    <Text style={styles.statValue}>
+                      {selectedGame.offRebound + selectedGame.defRebound}
+                    </Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>Assists:</Text>
+                    <Text style={styles.statValue}>{selectedGame.assists}</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>Steals:</Text>
+                    <Text style={styles.statValue}>{selectedGame.steals}</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>Blocks:</Text>
+                    <Text style={styles.statValue}>{selectedGame.blocks}</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>Turnovers:</Text>
+                    <Text style={styles.statValue}>
+                      {selectedGame.turnovers}
+                    </Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>Fouls:</Text>
+                    <Text style={styles.statValue}>{selectedGame.fouls}</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>FG%:</Text>
+                    <Text style={styles.statValue}>
+                      {calculatePercentage(
+                        selectedGame.madeFG,
+                        selectedGame.attemptFG
+                      )}
+                      %
+                    </Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>3PT%:</Text>
+                    <Text style={styles.statValue}>
+                      {calculatePercentage(
+                        selectedGame.made3PTS,
+                        selectedGame.attempt3PTS
+                      )}
+                      %
+                    </Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>FT%:</Text>
+                    <Text style={styles.statValue}>
+                      {calculatePercentage(
+                        selectedGame.madeFT,
+                        selectedGame.attemptFT
+                      )}
+                      %
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <Text style={styles.noDataText}>
+                  No game selected or available data.
+                </Text>
+              )}
+            </View>
+          )}
+
+          {/* Game Selection Modal */}
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={isGameSelectionModalVisible}
+            onRequestClose={() => {
+              setIsGameSelectionModalVisible(!isGameSelectionModalVisible);
+            }}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
+                <Text style={styles.modalTitle}>Select a Game</Text>
+                {athleteGameRecords.length > 0 ? (
+                  <FlatList
+                    data={athleteGameRecords}
+                    keyExtractor={(item: {
+                      game_id: { toString: () => any };
+                    }) => item.game_id.toString()}
+                    renderItem={renderGameItem}
+                    style={styles.modalList}
+                  />
+                ) : (
+                  <Text style={styles.noDataText}>No games available.</Text>
+                )}
+                <Pressable
+                  style={[styles.button, styles.buttonClose]}
+                  onPress={() =>
+                    setIsGameSelectionModalVisible(!isGameSelectionModalVisible)
+                  }
+                >
+                  <Text style={styles.textStyle}>Done</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Modal>
+
+          {/* Individual Stat Line Charts */}
           {actualGamesCharted > 1 && ( // Need at least 2 data points for a line chart
             <>
               <View style={styles.chartContainer}>
@@ -479,5 +654,94 @@ const styles = StyleSheet.create({
   chartStyle: {
     marginVertical: 8,
     borderRadius: 16,
+  },
+
+  subTitle: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: "#777",
+  },
+  selectGameButton: {
+    backgroundColor: "#f0f0f0",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  selectGameButtonText: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "600",
+  },
+  specificGameStats: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  gameDetailHeader: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 5,
+    color: "#333",
+  },
+
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+    backgroundColor: "rgba(0,0,0,0.5)", // Darken backgoround
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: "80%",
+    maxHeight: "70%",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  modalList: {
+    width: "100%",
+    marginBottom: 15,
+  },
+  gameItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    width: "100%",
+  },
+  gameItemText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  button: {
+    borderRadius: 10,
+    padding: 10,
+    elevation: 2,
+    minWidth: 100,
+  },
+  buttonClose: {
+    backgroundColor: "#EC1D25",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
