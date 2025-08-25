@@ -3,21 +3,25 @@ import React, { useState } from "react";
 import {
   Alert,
   FlatList,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import DrillFormModal from "./drill_form_modal";
+import DrillModal from "./drill_modal";
 import drills_list from "./drills_list";
-import practices_list_initial from "./practices";
 import PracticeCategoryModal from "./practice_category_modal";
 import PracticeFormModal from "./practice_form_modal";
+import practices_list_initial from "./practices";
 
 interface PracticeCategory {
   id: number;
   name: string;
   description: string;
+  skill: string[];
 }
 
 interface DrillItem {
@@ -26,6 +30,7 @@ interface DrillItem {
   description: string;
   from_id: number;
   steps: string[];
+  good_for: string[];
 }
 
 const PracticeScreen: React.FC = () => {
@@ -42,6 +47,12 @@ const PracticeScreen: React.FC = () => {
   const [isFormModalVisible, setIsFormModalVisible] = useState(false);
   const [editingPractice, setEditingPractice] =
     useState<PracticeCategory | null>(null);
+
+  const [selectedDrill, setSelectedDrill] = useState<DrillItem | null>(null);
+  const [isDrillModalVisible, setIsDrillModalVisible] = useState(false);
+
+  const [isDrillFormVisible, setIsDrillFormVisible] = useState(false);
+  const [editingDrill, setEditingDrill] = useState<DrillItem | null>(null);
 
   const filteredPractices = practices.filter((practice) =>
     practice.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -115,12 +126,13 @@ const PracticeScreen: React.FC = () => {
   const handleSavePractice = (
     id: number | null,
     name: string,
-    description: string
+    description: string,
+    skill: string
   ) => {
     if (id) {
       setPractices((prevPractices) =>
         prevPractices.map((p) =>
-          p.id === id ? { ...p, name: name, description: description } : p
+          p.id === id ? { ...p, name, description, skill: [skill] } : p
         )
       );
     } else {
@@ -128,13 +140,48 @@ const PracticeScreen: React.FC = () => {
         practices.length > 0 ? Math.max(...practices.map((p) => p.id)) + 1 : 1;
       const newPractice: PracticeCategory = {
         id: newId,
-        name: name,
-        description: description,
+        name,
+        description,
+        skill: [skill],
       };
       setPractices((prevPractices) => [...prevPractices, newPractice]);
     }
     setIsFormModalVisible(false);
     setEditingPractice(null);
+  };
+
+  const handleDrillPress = (drill: DrillItem) => {
+    setSelectedDrill(drill);
+    setIsDrillModalVisible(true);
+  };
+
+  const handleCloseDrillModal = () => {
+    setIsDrillModalVisible(false);
+    setSelectedDrill(null);
+  };
+
+  const handleAddDrill = () => {
+    setEditingDrill(null);
+    setIsDrillFormVisible(true);
+  };
+
+  const handleEditDrill = (drill: DrillItem) => {
+    setEditingDrill(drill);
+    setIsDrillFormVisible(true);
+  };
+
+  const handleSaveDrill = (drill: {
+    id: number | null;
+    from_id: number;
+    name: string;
+    description: string;
+    steps: string[];
+    good_for: string[];
+  }) => {
+    // In a real app, you would update your state or make an API call here
+    console.log("Saving drill:", drill);
+    // For now, just close the modal
+    setIsDrillFormVisible(false);
   };
 
   return (
@@ -188,9 +235,16 @@ const PracticeScreen: React.FC = () => {
               style={styles.backButton}
             >
               <Text style={styles.backButtonText}>
-                {"<- Back to Categories"}
+                {"< Back to Practice Categories"}
               </Text>
             </Pressable>
+
+            {selectedCategoryId && (
+              <Text style={styles.mainHeader}>
+                {practices.find((p) => p.id === selectedCategoryId)?.name ||
+                  "Drills"}
+              </Text>
+            )}
 
             <TextInput
               style={styles.search_input}
@@ -198,15 +252,24 @@ const PracticeScreen: React.FC = () => {
               value={drillSearchQuery}
               onChangeText={(text) => setDrillSearchQuery(text)}
             />
-            <Text style={styles.drillsCountText}>
-              Drills: {filteredDrills.length}
-            </Text>
+
+            <View style={styles.drillsHeader}>
+              <Text style={styles.drillsCountText}>
+                Drills: {filteredDrills.length}
+              </Text>
+              <Pressable onPress={handleAddDrill} style={styles.addButton}>
+                <Text style={styles.addButtonText}>+</Text>
+              </Pressable>
+            </View>
 
             {filteredDrills.length > 0 ? (
               <FlatList
                 data={filteredDrills}
                 renderItem={({ item }: { item: DrillItem }) => (
-                  <View style={styles.drill_container}>
+                  <Pressable
+                    onPress={() => handleDrillPress(item)}
+                    style={styles.drill_container}
+                  >
                     <Text style={styles.drill_name}>{item.name}</Text>
                     <Text style={styles.drill_description}>
                       {item.description}
@@ -220,7 +283,13 @@ const PracticeScreen: React.FC = () => {
                         ))}
                       </View>
                     )}
-                  </View>
+                    <Pressable
+                      onPress={() => handleEditDrill(item)}
+                      style={styles.editButton}
+                    >
+                      <Text style={styles.editButtonText}>Edit</Text>
+                    </Pressable>
+                  </Pressable>
                 )}
                 keyExtractor={(item: DrillItem) => item.id.toString()}
                 contentContainerStyle={styles.flatListContent}
@@ -234,6 +303,16 @@ const PracticeScreen: React.FC = () => {
         )}
       </View>
 
+      <Modal
+        visible={isDrillModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        {selectedDrill && (
+          <DrillModal drill={selectedDrill} onClose={handleCloseDrillModal} />
+        )}
+      </Modal>
+
       <PracticeFormModal
         visible={isFormModalVisible}
         onClose={() => {
@@ -242,6 +321,19 @@ const PracticeScreen: React.FC = () => {
         }}
         onSave={handleSavePractice}
         initialPractice={editingPractice}
+        existingPractices={practices}
+      />
+
+      <DrillFormModal
+        visible={isDrillFormVisible}
+        onClose={() => {
+          setIsDrillFormVisible(false);
+          setEditingDrill(null);
+        }}
+        onSave={handleSaveDrill}
+        initialDrill={editingDrill}
+        categoryId={selectedCategoryId || 0}
+        practices={practices}
       />
     </View>
   );
@@ -267,10 +359,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 10,
+    paddingHorizontal: 5,
   },
   practicesCountText: {
     fontSize: 16,
     color: "#555",
+    flex: 1,
   },
   drillsCountText: {
     fontSize: 16,
@@ -279,9 +373,9 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: "#EC1D25",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 45,
+    height: 45,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -289,12 +383,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    marginLeft: 10,
   },
   addButtonText: {
     color: "white",
-    fontSize: 24,
-    lineHeight: 24,
-    fontWeight: "bold",
+    fontSize: 20,
   },
   drills_screen_container: {
     flex: 1,
@@ -360,5 +453,39 @@ const styles = StyleSheet.create({
     color: "#888",
     textAlign: "center",
     marginTop: 20,
+  },
+  button: {
+    backgroundColor: "#007AFF",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  editButton: {
+    position: "absolute",
+    right: 10,
+    top: 10,
+    backgroundColor: "#007AFF",
+    padding: 6,
+    borderRadius: 12,
+  },
+  editButtonText: {
+    color: "white",
+    fontSize: 12,
+  },
+  drillsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+    paddingHorizontal: 5,
+  },
+  mainHeader: {
+    textAlign: "center",
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 15,
+    paddingHorizontal: 5,
   },
 });

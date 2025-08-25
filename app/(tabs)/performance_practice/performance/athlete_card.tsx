@@ -1,7 +1,4 @@
 // app/performance_practice/performance/athlete_modal.tsx
-// NOTE: Renamed from athlete_modal.tsx to be consistent with practice_category_modal pattern
-// but it's not actually a "modal" in the pop-up sense. It's a display card.
-// Consider renaming to AthleteCard.tsx for clarity if you prefer.
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Athlete } from "./interfaces"; // Import the Athlete interface

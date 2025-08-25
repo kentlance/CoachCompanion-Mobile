@@ -317,7 +317,7 @@ export default function AthleteDetailScreen() {
             </View>
           </View>
 
-          {/*  Stats for Specific Game Section (MODAL IMPLEMENTATION) */}
+          {/*  Stats for Specific Game Section */}
           {totalGamesPlayed > 0 && (
             <View style={styles.statsCard}>
               <Text style={styles.sectionTitle}>Stats for Specific Game</Text>
@@ -433,9 +433,7 @@ export default function AthleteDetailScreen() {
                 {athleteGameRecords.length > 0 ? (
                   <FlatList
                     data={athleteGameRecords}
-                    keyExtractor={(item: {
-                      game_id: { toString: () => any };
-                    }) => item.game_id.toString()}
+                    keyExtractor={(item: GameRecord) => item.game_id.toString()}
                     renderItem={renderGameItem}
                     style={styles.modalList}
                   />

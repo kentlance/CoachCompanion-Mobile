@@ -1,5 +1,5 @@
 // athlete_list.ts
-var athlete_list = [
+const athlete_list = [
   {
     id: 1,
     name: "Calo",

@@ -1,5 +1,5 @@
 // game_records.ts
-var game_record = [
+const game_record = [
   {
     id: 1,
     game_id: 1,

@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     overflow: "hidden", // Ensures nothing (like shadow from buttons) leaks outside rounded corners
     flexDirection: "column", // Arrange children vertically
-    justifyContent: "flex-end", // Push content to the bottom
+    justifyContent: "flex-end",
   },
   text_container: {
     marginLeft: 20,

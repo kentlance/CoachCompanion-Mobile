@@ -1,23 +1,21 @@
 // app/performance_practice/practice/practice_form_modal.tsx
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Modal,
-  View,
+  Pressable,
   Text,
   TextInput,
-  Pressable,
-  StyleSheet,
-  Dimensions,
+  View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
+import modalFormStyles from "./modalFormStyles";
 
 interface PracticeFormModalProps {
   visible: boolean;
   onClose: () => void;
-  // onSave now accepts an optional 'id' for editing
-  onSave: (id: number | null, name: string, description: string) => void;
-  initialPractice?: { id: number; name: string; description: string } | null; // Optional prop for initial data
+  onSave: (id: number | null, name: string, description: string, skill: string) => void;
+  initialPractice?: { id: number; name: string; description: string; skill: string[] } | null;
+  existingPractices?: { id: number; skill: string[] }[];
 }
 
 const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
@@ -25,39 +23,64 @@ const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
   onClose,
   onSave,
   initialPractice,
+  existingPractices = [],
 }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [skill, setSkill] = useState("");
   const [currentId, setCurrentId] = useState<number | null>(null);
+  const [showSkillWarning, setShowSkillWarning] = useState(false);
 
   // Effect to populate form fields when initialPractice changes (when editing)
   useEffect(() => {
     if (initialPractice) {
       setName(initialPractice.name);
       setDescription(initialPractice.description);
+      setSkill(initialPractice.skill[0] || "");
       setCurrentId(initialPractice.id);
     } else {
       // Clear fields when modal is opened for adding a new item
       setName("");
       setDescription("");
+      setSkill("");
       setCurrentId(null);
     }
-  }, [initialPractice, visible]); // Depend on initialPractice and visible to reset when modal opens for new item
+    setShowSkillWarning(false);
+  }, [initialPractice, visible]);
 
   const handleSave = () => {
     if (name.trim() === "") {
-      alert("Practice name cannot be empty.");
+      Alert.alert("Error", "Practice name cannot be empty.");
       return;
     }
-    // Pass currentId (null for new, actual ID for edit)
-    onSave(currentId, name.trim(), description.trim());
-    onClose(); // Close modal after saving
+    
+    if (skill.trim() === "") {
+      Alert.alert("Error", "Please specify a skill for this practice.");
+      return;
+    }
+
+    // Check if skill is already used by another practice
+    const isSkillUsed = existingPractices.some(
+      practice => 
+        practice.id !== currentId && 
+        practice.skill.some(s => s.toLowerCase() === skill.trim().toLowerCase())
+    );
+
+    if (isSkillUsed) {
+      setShowSkillWarning(true);
+      return;
+    }
+
+    onSave(currentId, name.trim(), description.trim(), skill.trim().toLowerCase());
+    handleClose();
   };
 
   const handleClose = () => {
     setName("");
     setDescription("");
+    setSkill("");
     setCurrentId(null);
+    setShowSkillWarning(false);
     onClose();
   };
 
@@ -73,20 +96,40 @@ const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
       visible={visible}
       onRequestClose={handleClose}
     >
-      <View style={styles.centeredView}>
-        <View style={styles.modalView}>
-          <Text style={styles.modalTitle}>{modalTitle}</Text>
+      <View style={modalFormStyles.centeredView}>
+        <View style={modalFormStyles.modalView}>
+          <Text style={modalFormStyles.modalTitle}>{modalTitle}</Text>
 
+          <Text style={modalFormStyles.label}>Practice Name</Text>
           <TextInput
-            style={styles.input}
-            placeholder="Practice Name"
+            style={modalFormStyles.input}
+            placeholder="e.g., Shooting Practice"
             value={name}
             onChangeText={setName}
             maxLength={50}
           />
+          
+          <Text style={modalFormStyles.label}>Skill</Text>
           <TextInput
-            style={[styles.input, styles.descriptionInput]}
-            placeholder="Description (Optional)"
+            style={modalFormStyles.input}
+            placeholder="e.g., shooting, dribbling, passing"
+            value={skill}
+            onChangeText={(text) => {
+              setSkill(text);
+              setShowSkillWarning(false);
+            }}
+            maxLength={30}
+          />
+          {showSkillWarning && (
+            <Text style={styles.warningText}>
+              Warning: This skill is already used by another practice.
+            </Text>
+          )}
+
+          <Text style={modalFormStyles.label}>Description (Optional)</Text>
+          <TextInput
+            style={[modalFormStyles.input, modalFormStyles.textArea]}
+            placeholder="Describe the practice category..."
             value={description}
             onChangeText={setDescription}
             multiline
@@ -94,18 +137,18 @@ const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
             maxLength={200}
           />
 
-          <View style={styles.buttonContainer}>
+          <View style={modalFormStyles.buttonContainer}>
             <Pressable
-              style={[styles.button, styles.buttonCancel]}
+              style={[modalFormStyles.button, modalFormStyles.buttonCancel]}
               onPress={handleClose}
             >
-              <Text style={styles.textStyle}>Cancel</Text>
+              <Text style={[modalFormStyles.buttonText, { color: '#000' }]}>Cancel</Text>
             </Pressable>
             <Pressable
-              style={[styles.button, styles.buttonSave]}
+              style={[modalFormStyles.button, modalFormStyles.buttonSave]}
               onPress={handleSave}
             >
-              <Text style={styles.textStyle}>{saveButtonText}</Text>
+              <Text style={modalFormStyles.buttonText}>{saveButtonText}</Text>
             </Pressable>
           </View>
         </View>
@@ -114,74 +157,13 @@ const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+const styles = {
+  warningText: {
+    color: '#ff3b30',
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 10,
   },
-  modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    width: width * 0.9,
-    maxWidth: 400,
-  },
-  modalTitle: {
-    marginBottom: 20,
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  input: {
-    width: "100%",
-    padding: 10,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    fontSize: 16,
-  },
-  descriptionInput: {
-    height: 80,
-    textAlignVertical: "top",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    marginTop: 10,
-  },
-  button: {
-    borderRadius: 10,
-    padding: 12,
-    elevation: 2,
-    minWidth: 100,
-    alignItems: "center",
-  },
-  buttonCancel: {
-    backgroundColor: "#999",
-  },
-  buttonSave: {
-    backgroundColor: "#EC1D25", // Using your app's red accent color
-  },
-  textStyle: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
-    fontSize: 16,
-  },
-});
+} as const;
 
 export default PracticeFormModal;
