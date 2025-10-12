@@ -16,8 +16,9 @@ import { LineChart, ProgressChart } from "react-native-chart-kit";
 
 import athlete_list from "./athlete_list";
 import game_record_data from "./game_records";
+
 import { Athlete, GameRecord } from "./interfaces";
-import { calculateAttentionScore } from "./utils/performanceUtils";
+import { analyzePlayerPerformance } from "./utils/performanceUtils";
 const screenWidth = Dimensions.get("window").width;
 const CHART_GAMES_LIMIT = 5; // Game limit on charts
 
@@ -37,6 +38,9 @@ export default function AthleteDetailScreen() {
   const [attentionPriorities, setAttentionPriorities] = useState<
     { stat: string; score: number }[]
   >([]);
+  const [excellenceAreas, setExcellenceAreas] = useState<
+    { stat: string; score: number }[]
+  >([]);
 
   useEffect(() => {
     if (athleteId) {
@@ -52,12 +56,13 @@ export default function AthleteDetailScreen() {
       setAthleteGameRecords(sortedRecords);
 
       // Calculate Attention Scores (Uses all data, as the function handles the limit and filtering)
-      const priorities = calculateAttentionScore(
+      const { attentionAreas, excellenceAreas } = analyzePlayerPerformance(
         id,
         game_record_data, // Pass all data for league average calculation
         CHART_GAMES_LIMIT // The N games to analyze
       );
-      setAttentionPriorities(priorities);
+      setAttentionPriorities(attentionAreas);
+      setExcellenceAreas(excellenceAreas);
 
       // Set the most recent game as the default selected game
       if (sortedRecords.length > 0) {
@@ -589,6 +594,37 @@ export default function AthleteDetailScreen() {
             </View>
           )}
 
+          {/* Excelling at... */}
+          <View style={[styles.statsCard, styles.excellenceCard]}>
+            <Text style={[styles.sectionTitle, { color: "#387B45" }]}>
+              ⭐ Current Strengths
+            </Text>
+            <Text style={[styles.sectionText]}>
+              This was generated from the last {actualGamesCharted} games.
+            </Text>
+            {excellenceAreas.length > 0 ? ( // <-- Use excellenceAreas
+              excellenceAreas.map((item, index) => (
+                <View key={index} style={styles.priorityItem}>
+                  <Text style={styles.priorityText}>
+                    {index + 1}.{" "}
+                    <Text style={styles.priorityStat}>{item.stat}</Text>
+                  </Text>
+                  <Text style={{ color: "#387B45", fontWeight: "bold" }}>
+                    +{item.score.toFixed(2)} *
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noDataText}>
+                No stand-out strengths found in this period (performing close to
+                the average). Check again after a few games!
+              </Text>
+            )}
+            <Text>
+              *Based on standardized comparison to team averages (z-score)
+            </Text>
+          </View>
+
           {/* Priority List / Needs Attention */}
           <View style={[styles.statsCard, styles.attentionCard]}>
             <Text style={[styles.sectionTitle, { color: "#EC1D25" }]}>
@@ -614,7 +650,7 @@ export default function AthleteDetailScreen() {
               </Text>
             )}
             <Text>
-              * = Based on standardized comparison to team averages (z-score)
+              *Based on standardized comparison to team averages (z-score)
             </Text>
           </View>
         </>
@@ -796,6 +832,13 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginBottom: 30,
   },
+  excellenceCard: {
+    borderColor: "#387B45",
+    borderWidth: 2,
+    padding: 15,
+    marginTop: 15,
+    marginBottom: 30,
+  },
   priorityItem: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -810,7 +853,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   priorityStat: {
-    color: "#EC1D25", // Highlight the stat name in red
+    color: "#EC1D25",
     fontWeight: "700",
   },
 });
