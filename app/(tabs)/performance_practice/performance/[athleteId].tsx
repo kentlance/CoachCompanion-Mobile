@@ -602,12 +602,12 @@ export default function AthleteDetailScreen() {
             <Text style={[styles.sectionText]}>
               This was generated from the last {actualGamesCharted} games.
             </Text>
-            {excellenceAreas.length > 0 ? ( // <-- Use excellenceAreas
+            {excellenceAreas.length > 0 ? (
               excellenceAreas.map((item, index) => (
                 <View key={index} style={styles.priorityItem}>
                   <Text style={styles.priorityText}>
                     {index + 1}.{" "}
-                    <Text style={styles.priorityStat}>{item.stat}</Text>
+                    <Text style={styles.excellenceCardText}>{item.stat}</Text>
                   </Text>
                   <Text style={{ color: "#387B45", fontWeight: "bold" }}>
                     +{item.score.toFixed(2)} *
@@ -838,6 +838,11 @@ const styles = StyleSheet.create({
     padding: 15,
     marginTop: 15,
     marginBottom: 30,
+  },
+  excellenceCardText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#387B45",
   },
   priorityItem: {
     flexDirection: "row",
