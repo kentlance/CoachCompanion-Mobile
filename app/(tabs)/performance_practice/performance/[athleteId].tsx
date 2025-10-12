@@ -17,7 +17,7 @@ import { LineChart, ProgressChart } from "react-native-chart-kit";
 import athlete_list from "./athlete_list";
 import game_record_data from "./game_records";
 import { Athlete, GameRecord } from "./interfaces";
-
+import { calculateAttentionScore } from "./utils/performanceUtils";
 const screenWidth = Dimensions.get("window").width;
 const CHART_GAMES_LIMIT = 5; // Game limit on charts
 
@@ -33,10 +33,15 @@ export default function AthleteDetailScreen() {
   const [isGameSelectionModalVisible, setIsGameSelectionModalVisible] =
     useState(false);
 
+  // State to hold the attention score results
+  const [attentionPriorities, setAttentionPriorities] = useState<
+    { stat: string; score: number }[]
+  >([]);
+
   useEffect(() => {
     if (athleteId) {
       const id = parseInt(athleteId as string);
-      const foundAthlete = athlete_list.find((a) => a.id === id);
+      const foundAthlete = athlete_list.find((a) => a.athlete_no === id);
       setAthlete(foundAthlete || null);
 
       const records = game_record_data.filter(
@@ -45,6 +50,14 @@ export default function AthleteDetailScreen() {
       // Sort by most recent game (descending game_id)
       const sortedRecords = records.sort((a, b) => b.game_id - a.game_id);
       setAthleteGameRecords(sortedRecords);
+
+      // Calculate Attention Scores (Uses all data, as the function handles the limit and filtering)
+      const priorities = calculateAttentionScore(
+        id,
+        game_record_data, // Pass all data for league average calculation
+        CHART_GAMES_LIMIT // The N games to analyze
+      );
+      setAttentionPriorities(priorities);
 
       // Set the most recent game as the default selected game
       if (sortedRecords.length > 0) {
@@ -252,11 +265,13 @@ export default function AthleteDetailScreen() {
   return (
     <ScrollView style={styles.container}>
       <Stack.Screen
-        options={{ headerTitle: `${athlete.name}'s Performance` }}
+        options={{
+          headerTitle: `${athlete.first_name} ${athlete.second_name}'s Performance`,
+        }}
       />
 
       <Text style={styles.playerName}>
-        {athlete.name} (#{athlete.number})
+        {athlete.first_name} {athlete.second_name} (#{athlete.player_no})
       </Text>
 
       {totalGamesPlayed === 0 ? (
@@ -573,6 +588,35 @@ export default function AthleteDetailScreen() {
               />
             </View>
           )}
+
+          {/* Priority List / Needs Attention */}
+          <View style={[styles.statsCard, styles.attentionCard]}>
+            <Text style={[styles.sectionTitle, { color: "#EC1D25" }]}>
+              🚨 Needs Attention
+            </Text>
+            <Text style={[styles.sectionText]}>
+              This was generated from the last {actualGamesCharted} games.
+            </Text>
+            {attentionPriorities.length > 0 ? (
+              attentionPriorities.map((item, index) => (
+                <View key={index} style={styles.priorityItem}>
+                  <Text style={styles.priorityText}>
+                    {index + 1}.{" "}
+                    <Text style={styles.priorityStat}>{item.stat}</Text>
+                  </Text>
+                  <Text>{item.score.toFixed(2)} *</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noDataText}>
+                No significant areas needing attention found (performing at or
+                above the average). 🎉
+              </Text>
+            )}
+            <Text>
+              * = Based on standardized comparison to team averages (z-score)
+            </Text>
+          </View>
         </>
       )}
     </ScrollView>
@@ -600,6 +644,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
     paddingBottom: 5,
+  },
+  sectionText: {
+    fontSize: 16,
   },
   statsCard: {
     backgroundColor: "#fff",
@@ -741,5 +788,29 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
+  },
+  attentionCard: {
+    borderColor: "#EC1D25",
+    borderWidth: 2,
+    padding: 15,
+    marginTop: 15,
+    marginBottom: 30,
+  },
+  priorityItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  priorityText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  priorityStat: {
+    color: "#EC1D25", // Highlight the stat name in red
+    fontWeight: "700",
   },
 });

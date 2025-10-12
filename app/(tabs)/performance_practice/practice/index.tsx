@@ -13,6 +13,7 @@ import {
 import DrillFormModal from "./drill_form_modal";
 import DrillModal from "./drill_modal";
 import drills_list from "./drills_list";
+import GenerateRegimenModal from "./generate_regimen_modal";
 import PracticeCategoryModal from "./practice_category_modal";
 import PracticeFormModal from "./practice_form_modal";
 import practices_list_initial from "./practices";
@@ -43,6 +44,8 @@ const PracticeScreen: React.FC = () => {
   const [practices, setPractices] = useState<PracticeCategory[]>(
     practices_list_initial
   );
+
+  const [isRegimenModalVisible, setIsRegimenModalVisible] = useState(false);
 
   const [isFormModalVisible, setIsFormModalVisible] = useState(false);
   const [editingPractice, setEditingPractice] =
@@ -83,6 +86,14 @@ const PracticeScreen: React.FC = () => {
     setSelectedCategoryId(null);
     setSearchQuery("");
     setDrillSearchQuery("");
+  };
+
+  const handleShowGenerateRegimenModal = () => {
+    setIsRegimenModalVisible(true);
+  };
+
+  const handleGenerateRegimen = () => {
+    setIsRegimenModalVisible(false);
   };
 
   const handleAddPractice = () => {
@@ -189,6 +200,18 @@ const PracticeScreen: React.FC = () => {
       <View style={{ flex: 1 }}>
         {selectedCategoryId === null ? (
           <View style={styles.practices_container}>
+            {/** if user is athlete, show assigned regimens, if user is coach, show created regimens */}
+
+            <View style={styles.category_header}>
+              <Text style={styles.category_text}>Created Regimens</Text>
+            </View>
+            <View style={styles.category_header}>
+              <Text style={styles.category_text}>Practice Regimens</Text>
+            </View>
+            <View style={styles.category_header}>
+              <Text style={styles.category_text}>Practices</Text>
+            </View>
+
             <TextInput
               style={styles.search_input}
               placeholder="Search practices"
@@ -199,6 +222,17 @@ const PracticeScreen: React.FC = () => {
               <Text style={styles.practicesCountText}>
                 Practices: {filteredPractices.length}
               </Text>
+            </View>
+
+            {/** Floating button */}
+            <View style={styles.floatingButtonsContainer}>
+              <Pressable
+                style={styles.addButton}
+                onPress={handleShowGenerateRegimenModal}
+              >
+                <Text style={styles.addButtonText}>@</Text>
+              </Pressable>
+
               <Pressable onPress={handleAddPractice} style={styles.addButton}>
                 <Text style={styles.addButtonText}>+</Text>
               </Pressable>
@@ -257,6 +291,8 @@ const PracticeScreen: React.FC = () => {
               <Text style={styles.drillsCountText}>
                 Drills: {filteredDrills.length}
               </Text>
+            </View>
+            <View style={styles.floatingButtonsContainer}>
               <Pressable onPress={handleAddDrill} style={styles.addButton}>
                 <Text style={styles.addButtonText}>+</Text>
               </Pressable>
@@ -302,7 +338,6 @@ const PracticeScreen: React.FC = () => {
           </View>
         )}
       </View>
-
       <Modal
         visible={isDrillModalVisible}
         animationType="slide"
@@ -312,6 +347,11 @@ const PracticeScreen: React.FC = () => {
           <DrillModal drill={selectedDrill} onClose={handleCloseDrillModal} />
         )}
       </Modal>
+      <GenerateRegimenModal
+        visible={isRegimenModalVisible}
+        onClose={() => setIsRegimenModalVisible(false)}
+        onSave={handleGenerateRegimen}
+      />
 
       <PracticeFormModal
         visible={isFormModalVisible}
@@ -323,7 +363,6 @@ const PracticeScreen: React.FC = () => {
         initialPractice={editingPractice}
         existingPractices={practices}
       />
-
       <DrillFormModal
         visible={isDrillFormVisible}
         onClose={() => {
@@ -345,6 +384,18 @@ const styles = StyleSheet.create({
   practices_container: {
     padding: 10,
     flex: 1,
+  },
+  category_header: {
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    height: 70,
+    marginBottom: 10,
+    marginTop: 10,
+    width: "100%",
+  },
+  category_text: {
+    textAlign: "center",
+    fontSize: 20,
   },
   search_input: {
     height: 40,
@@ -389,10 +440,18 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 20,
   },
+  floatingButtonsContainer: {
+    position: "absolute",
+    bottom: 40,
+    right: 30,
+    gap: 10,
+    zIndex: 10,
+  },
   drills_screen_container: {
     flex: 1,
     padding: 10,
     backgroundColor: "#f9f9f9",
+    position: "relative",
   },
   backButton: {
     paddingVertical: 10,

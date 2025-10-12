@@ -1,9 +1,13 @@
 // app/performance_practice/performance/interfaces.ts
 
 export interface Athlete {
-  id: number;
-  name: string;
-  number: string; // Jersey number
+  athlete_no: number;
+  first_name: string;
+  second_name: string;
+  last_name: string;
+  position: string;
+  player_no: string;
+  gmail: string; // Jersey number
 }
 
 export interface GameRecord {

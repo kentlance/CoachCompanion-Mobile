@@ -1,4 +1,3 @@
-// practices.ts
 const drills_list = [
   {
     id: 1,
@@ -9,7 +8,7 @@ const drills_list = [
       "1. Start at three point lane.",
       "2. Count succesful shots within one minute.",
     ],
-    good_for: ["shooting", "footwork", "passing"]
+    good_for: ["shooting", "footwork", "passing"],
   },
   {
     id: 2,
@@ -22,7 +21,7 @@ const drills_list = [
       "3. Switch hands and repeat for 30 seconds.",
       "4. Gradually increase speed and difficulty by adding crossovers, behind-the-back dribbles, and between-the-legs dribbles.",
     ],
-    good_for: ["dribbling", "footwork", "shooting"]
+    good_for: ["dribbling", "footwork", "shooting"],
   },
   {
     id: 3,
@@ -35,7 +34,7 @@ const drills_list = [
       "3. Focus on keeping the head up and staying low.",
       "4. Gradually increase speed and difficulty by adding crossovers, behind-the-back dribbles, and between-the-legs dribbles.",
     ],
-    good_for: ["dribbling", "footwork", "shooting"]
+    good_for: ["dribbling", "footwork", "shooting"],
   },
   {
     id: 4,
@@ -48,7 +47,7 @@ const drills_list = [
       "3. Focus on keeping the head up and staying low.",
       "4. Gradually increase speed and difficulty by adding more cones or decreasing the space between them.",
     ],
-    good_for: ["dribbling", "footwork", "shooting"]
+    good_for: ["dribbling", "footwork", "shooting"],
   },
   {
     id: 5,
@@ -61,7 +60,7 @@ const drills_list = [
       "3. Gradually increase distance and difficulty by adding movement and obstacles.",
       "4. Switch roles and repeat for 30 seconds.",
     ],
-    good_for: ["passing", "dribbling", "shooting"]
+    good_for: ["passing", "dribbling", "shooting"],
   },
   {
     id: 6,
@@ -74,7 +73,7 @@ const drills_list = [
       "3. Gradually increase speed and difficulty by adding movement and obstacles.",
       "4. Switch hands and repeat for 30 seconds.",
     ],
-    good_for: ["passing", "dribbling", "shooting"]
+    good_for: ["passing", "dribbling", "shooting"],
   },
   {
     id: 7,
@@ -87,7 +86,7 @@ const drills_list = [
       "3. Focus on keeping the head up and staying low.",
       "4. Gradually increase speed and difficulty by adding more cones or decreasing the space between them.",
     ],
-    good_for: ["passing", "footwork", "dribbling"]
+    good_for: ["passing", "footwork", "dribbling"],
   },
   {
     id: 8,
@@ -100,7 +99,7 @@ const drills_list = [
       "3. Focus on quick feet and explosive movements.",
       "4. Gradually increase speed and difficulty by adding more complex patterns and decreasing rest time.",
     ],
-    good_for: ["footwork", "dribbling", "shooting"]
+    good_for: ["footwork", "dribbling", "shooting"],
   },
   {
     id: 9,
@@ -113,7 +112,7 @@ const drills_list = [
       "3. Focus on quick feet and explosive movements.",
       "4. Gradually increase speed and difficulty by adding more complex patterns and decreasing rest time.",
     ],
-    good_for: ["footwork", "dribbling", "shooting"]
+    good_for: ["footwork", "dribbling", "shooting"],
   },
   {
     id: 10,
@@ -126,7 +125,7 @@ const drills_list = [
       "3. Repeat for 30 seconds, focusing on quick turnaround and explosive movements.",
       "4. Gradually increase height and difficulty by adding more boxes or increasing the distance between them.",
     ],
-    good_for: ["footwork", "dribbling", "shooting"]
+    good_for: ["footwork", "dribbling", "shooting"],
   },
   {
     id: 11,
@@ -139,7 +138,7 @@ const drills_list = [
       "3. Take a 30-second break and repeat for 3 sets.",
       "4. Gradually increase difficulty by adding movement and obstacles.",
     ],
-    good_for: ["shooting", "footwork", "passing"]
+    good_for: ["shooting", "footwork", "passing"],
   },
   {
     id: 12,
@@ -152,7 +151,7 @@ const drills_list = [
       "3. Catch the ball and immediately shoot, focusing on quick release and proper shooting form.",
       "4. Repeat for 30 seconds, then switch roles and repeat.",
     ],
-    good_for: ["shooting", "footwork", "passing"]
+    good_for: ["shooting", "footwork", "passing"],
   },
   {
     id: 13,
@@ -165,7 +164,7 @@ const drills_list = [
       "3. Pull up for a jump shot, focusing on proper shooting form and follow-through.",
       "4. Repeat for 30 seconds, then switch roles and repeat.",
     ],
-    good_for: ["shooting", "dribbling", "footwork"]
+    good_for: ["shooting", "dribbling", "footwork"],
   },
 ];
 

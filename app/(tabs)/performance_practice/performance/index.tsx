@@ -20,8 +20,8 @@ export default function PerformanceScreen() {
 
   const filteredAthletes = athlete_list.filter(
     (athlete) =>
-      athlete.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      athlete.number.includes(searchQuery)
+      athlete.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      athlete.player_no.includes(searchQuery)
   );
 
   const handleAthletePress = (athleteId: number) => {
@@ -60,13 +60,13 @@ export default function PerformanceScreen() {
       {filteredAthletes.length > 0 ? (
         <FlatList
           data={filteredAthletes}
-          keyExtractor={(item: Athlete) => item.id.toString()}
+          keyExtractor={(item: Athlete) => item.athlete_no.toString()}
           numColumns={2} // Display athletes in a 2-column grid
           columnWrapperStyle={styles.row} // Style for each row in the grid
           renderItem={({ item: athlete }: { item: Athlete }) => (
             <Pressable
-              key={athlete.id}
-              onPress={() => handleAthletePress(athlete.id)}
+              key={athlete.athlete_no}
+              onPress={() => handleAthletePress(athlete.athlete_no)}
               style={styles.athleteCardPressable}
             >
               <AthleteModal athlete={athlete} />

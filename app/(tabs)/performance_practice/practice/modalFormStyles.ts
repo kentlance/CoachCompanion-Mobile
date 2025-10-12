@@ -60,6 +60,15 @@ export const modalFormStyles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: "#f9f9f9",
   },
+  input_text: {
+    backgroundColor: "#f9f9f9",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    fontSize: 16,
+  },
   textArea: {
     minHeight: 80,
     textAlignVertical: "top",
@@ -90,8 +99,8 @@ export const modalFormStyles = StyleSheet.create({
   stepNumber: {
     width: 24,
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
     marginRight: 5,
   },
   stepInput: {
@@ -157,6 +166,22 @@ export const modalFormStyles = StyleSheet.create({
   editButtonText: {
     color: "white",
     fontSize: 12,
+  },
+  // for generate_regimen_modal
+  // general list items
+  listItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between", // Distribute space between text and checkbox
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+
+  listItemText: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
   },
 });
 

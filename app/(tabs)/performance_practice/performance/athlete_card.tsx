@@ -12,9 +12,9 @@ export default function AthleteModal({ athlete }: AthleteModalProps) {
     <View style={styles.container}>
       {/* Athlete Image Placeholder */}
       <View style={styles.athlete_image_placeholder}>
-        <Text style={styles.athlete_number}>{athlete.number}</Text>
+        <Text style={styles.athlete_number}>{athlete.player_no}</Text>
       </View>
-      <Text style={styles.athlete_name}>{athlete.name}</Text>
+      <Text style={styles.athlete_name}>{athlete.first_name} {athlete.last_name}</Text>
     </View>
   );
 }
