@@ -1,7 +1,7 @@
 type StatKey = string;
 
 type TrainingSample = {
-  features: { [key in StatKey]: number }; // normalized attention scores
+  features: { [key in StatKey]: number }; // normalized attention scores -ranged from 0 to 1 nearest to 1 means more attention is needed
   labels: number[]; // drill IDs that worked well
 };
 
