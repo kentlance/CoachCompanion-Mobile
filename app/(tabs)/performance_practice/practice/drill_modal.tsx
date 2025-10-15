@@ -2,6 +2,19 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const STAT_OPTIONS: { [key: string]: string } = {
+  FG_PCT: "FG% Efficiency",
+  _2PTS_PCT: "2PT% Efficiency",
+  _3PTS_PCT: "3PT% Efficiency",
+  FT_PCT: "FT% Efficiency",
+  REB: "Rebounding (Total)",
+  assists: "Assists",
+  steals: "Steals (Defense)",
+  blocks: "Blocks (Defense)",
+  turnovers: "Turnovers",
+  points: "Scoring (Points)",
+};
+
 interface DrillModalProps {
   drill: {
     id: number;
@@ -12,6 +25,10 @@ interface DrillModalProps {
   };
   onClose: () => void;
 }
+const getStatDisplayName = (statKey: string): string => {
+  // If not found default to the key itself.
+  return STAT_OPTIONS[statKey] || statKey;
+};
 
 export default function DrillModal({ drill, onClose }: DrillModalProps) {
   return (
@@ -39,22 +56,20 @@ export default function DrillModal({ drill, onClose }: DrillModalProps) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>This drill is good for:</Text>
             <View style={styles.skillsContainer}>
-              {drill.good_for.map((skill, index) => {
-                // Determine background color based on index
-                let backgroundColor = "#e3f2fd"; // Default color
+              {drill.good_for.map((skillKey, index) => {
+                const displayName = getStatDisplayName(skillKey);
+
+                let backgroundColor = "#e3f2fd";
                 if (index === 0) backgroundColor = "#7CEE6D";
-                else if (index === 1) backgroundColor = "#D5CC84";
-                else if (index === 2) backgroundColor = "#FFB790";
-                
+                else if (index === 1) backgroundColor = "#fef29aff";
+                else if (index === 2) backgroundColor = "#ffc3a3ff";
+
                 return (
-                  <View 
-                    key={index} 
-                    style={[
-                      styles.skillTag, 
-                      { backgroundColor }
-                    ]}
+                  <View
+                    key={index}
+                    style={[styles.skillTag, { backgroundColor }]}
                   >
-                    <Text style={styles.skillText}>{skill}</Text>
+                    <Text style={styles.skillText}>{displayName}</Text>
                   </View>
                 );
               })}
@@ -113,11 +128,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginBottom: 8,
     alignItems: "flex-start",
-  },
-  stepNumber: {
-    fontWeight: "bold",
-    marginRight: 8,
-    color: "#666",
   },
   stepText: {
     flex: 1,

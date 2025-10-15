@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import DrillFormModal from "./drill_form_modal";
 import DrillModal from "./drill_modal";
-import drills_list from "./drills_list";
+import drills_list_initial from "./drills_list";
 import GenerateRegimenModal from "./generate_regimen_modal";
 import PracticeCategoryModal from "./practice_category_modal";
 import PracticeFormModal from "./practice_form_modal";
@@ -45,6 +45,8 @@ const PracticeScreen: React.FC = () => {
     practices_list_initial
   );
 
+  const [drills, setDrills] = useState<DrillItem[]>(drills_list_initial);
+
   const [isRegimenModalVisible, setIsRegimenModalVisible] = useState(false);
 
   const [isFormModalVisible, setIsFormModalVisible] = useState(false);
@@ -63,7 +65,7 @@ const PracticeScreen: React.FC = () => {
 
   // Filter drills first by category, then by drill search query
   const drillsForSelectedCategory = selectedCategoryId
-    ? drills_list.filter((drill) => drill.from_id === selectedCategoryId)
+    ? drills.filter((drill) => drill.from_id === selectedCategoryId)
     : [];
 
   const filteredDrills = drillsForSelectedCategory.filter(
@@ -125,8 +127,11 @@ const PracticeScreen: React.FC = () => {
             setPractices((prevPractices) =>
               prevPractices.filter((p) => p.id !== id)
             );
+            setDrills((prevDrills) =>
+              prevDrills.filter((d) => d.from_id !== id)
+            );
             if (selectedCategoryId === id) {
-              setSelectedCategoryId(null); // Deselect if current category is deleted
+              setSelectedCategoryId(null);
             }
           },
         },
@@ -189,10 +194,41 @@ const PracticeScreen: React.FC = () => {
     steps: string[];
     good_for: string[];
   }) => {
-    // In a real app, you would update your state or make an API call here
-    console.log("Saving drill:", drill);
-    // For now, just close the modal
+    if (drill.id !== null) {
+      // Editing existing drill
+      setDrills((prevDrills) =>
+        prevDrills.map((d) =>
+          d.id === drill.id
+            ? {
+                ...d,
+                name: drill.name,
+                description: drill.description,
+                steps: drill.steps,
+                good_for: drill.good_for,
+                from_id: drill.from_id,
+              }
+            : d
+        )
+      );
+    } else {
+      // Adding new drill
+      const newId =
+        drills.length > 0 ? Math.max(...drills.map((d) => d.id)) + 1 : 1;
+      const newDrill: DrillItem = {
+        id: newId,
+        name: drill.name,
+        description: drill.description,
+        from_id: drill.from_id,
+        steps: drill.steps,
+        good_for: drill.good_for,
+      };
+      setDrills((prevDrills) => [...prevDrills, newDrill]);
+    }
+
+    // close the modal
     setIsDrillFormVisible(false);
+    setEditingDrill(null);
+    setSelectedDrill(null); // Clear selected drill if one was open
   };
 
   return (

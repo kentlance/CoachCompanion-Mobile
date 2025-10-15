@@ -621,7 +621,8 @@ export default function AthleteDetailScreen() {
               </Text>
             )}
             <Text>
-              *Based on standardized comparison to team averages (z-score)
+              *Based on standardized comparison to team averages (z-score) over
+              last {actualGamesCharted} games
             </Text>
           </View>
 
@@ -650,7 +651,8 @@ export default function AthleteDetailScreen() {
               </Text>
             )}
             <Text>
-              *Based on standardized comparison to team averages (z-score)
+              *Based on standardized comparison to team averages (z-score) over
+              last {actualGamesCharted} games
             </Text>
           </View>
         </>

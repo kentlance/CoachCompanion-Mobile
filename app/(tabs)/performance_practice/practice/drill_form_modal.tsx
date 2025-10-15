@@ -1,14 +1,33 @@
+import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Modal,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
+
 import modalFormStyles from "./modalFormStyles";
+
+// focus stats options
+const STAT_OPTIONS: { [key: string]: string } = {
+  FG_PCT: "FG% Efficiency",
+  _2PTS_PCT: "2PT% Efficiency",
+  _3PTS_PCT: "3PT% Efficiency",
+  FT_PCT: "FT% Efficiency",
+  REB: "Rebounding (Total)",
+  assists: "Assists",
+  steals: "Steals (Defense)",
+  blocks: "Blocks (Defense)",
+  turnovers: "Turnovers",
+  points: "Scoring (Points)",
+};
+
+// Convert options to an array for easy mapping rendering
+const STAT_KEYS = Object.keys(STAT_OPTIONS);
 
 interface DrillFormModalProps {
   visible: boolean;
@@ -44,12 +63,11 @@ const DrillFormModal: React.FC<DrillFormModalProps> = ({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [steps, setSteps] = useState<string[]>([""]);
-  const [skills, setSkills] = useState<string[]>([""]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [currentId, setCurrentId] = useState<number | null>(null);
   const [fromId, setFromId] = useState<number>(categoryId);
 
-  // Get the primary skill from the selected category
-  const primarySkill =
+  const primarySkillKey =
     practices.find((p) => p.id === categoryId)?.skill[0] || "";
 
   useEffect(() => {
@@ -66,10 +84,10 @@ const DrillFormModal: React.FC<DrillFormModalProps> = ({
       setDescription("");
       setSteps([""]);
       // Pre-fill the first skill with the category's primary skill
-      setSkills([primarySkill, "", ""]);
+      setSkills([primarySkillKey, "", ""]);
       setCurrentId(null);
     }
-  }, [initialDrill, visible, categoryId, primarySkill]);
+  }, [initialDrill, visible, categoryId, primarySkillKey]);
 
   const handleSave = () => {
     if (name.trim() === "") {
@@ -82,9 +100,11 @@ const DrillFormModal: React.FC<DrillFormModalProps> = ({
       return;
     }
 
-    const validSkills = skills.filter((skill) => skill.trim() !== "");
+    const validSkills = skills.filter(
+      (skill) => skill.trim() !== "" && STAT_OPTIONS[skill]
+    );
     if (validSkills.length === 0) {
-      Alert.alert("Error", "Please add at least one skill.");
+      Alert.alert("Error", "Please add at least one valid skill.");
       return;
     }
 
@@ -99,8 +119,7 @@ const DrillFormModal: React.FC<DrillFormModalProps> = ({
   };
 
   const handleStepChange = (text: string, index: number) => {
-    // Remove any existing numbers at the start of the step
-    const cleanText = text.replace(/^\d+\.?\s*/, '');
+    const cleanText = text.replace(/^\d+\.?\s*/, "");
     const newSteps = [...steps];
     newSteps[index] = cleanText;
     setSteps(newSteps);
@@ -119,19 +138,22 @@ const DrillFormModal: React.FC<DrillFormModalProps> = ({
     }
   };
 
-  const handleSkillChange = (text: string, index: number) => {
+  // handler for selecting a stat key
+  const handleSkillSelection = (selectedStatKey: string, index: number) => {
     const newSkills = [...skills];
-    newSkills[index] = text;
+    newSkills[index] = selectedStatKey;
     setSkills(newSkills);
   };
 
   const addSkill = () => {
     if (skills.length < 3) {
+      // Add an empty string to represent an unselected skill slot
       setSkills([...skills, ""]);
     }
   };
 
   const removeSkill = (index: number) => {
+    // one skill always required
     if (skills.length > 1) {
       const newSkills = skills.filter((_, i) => i !== index);
       setSkills(newSkills);
@@ -173,6 +195,7 @@ const DrillFormModal: React.FC<DrillFormModalProps> = ({
               maxLength={200}
             />
 
+            {/* Steps Section */}
             <View style={modalFormStyles.section}>
               <View style={modalFormStyles.sectionHeader}>
                 <Text style={modalFormStyles.label}>Steps</Text>
@@ -209,29 +232,43 @@ const DrillFormModal: React.FC<DrillFormModalProps> = ({
               ))}
             </View>
 
+            {/* Skills Selection */}
             <View style={modalFormStyles.section}>
               <View style={modalFormStyles.sectionHeader}>
-                <Text style={modalFormStyles.label}>Skills</Text>
+                <Text style={modalFormStyles.label}>Focus Stats (Max 3)</Text>
                 {skills.length < 3 && (
                   <Pressable
                     onPress={addSkill}
                     style={modalFormStyles.addButton}
                   >
                     <Text style={modalFormStyles.addButtonText}>
-                      + Add Skill
+                      + Add Stat
                     </Text>
                   </Pressable>
                 )}
               </View>
-              {skills.map((skill, index) => (
+              {skills.map((skillKey, index) => (
                 <View key={index} style={modalFormStyles.skillContainer}>
-                  <TextInput
-                    style={[modalFormStyles.input, modalFormStyles.skillInput]}
-                    placeholder={`Skill ${index + 1}`}
-                    value={skill}
-                    onChangeText={(text) => handleSkillChange(text, index)}
-                    maxLength={20}
-                  />
+                  <Picker
+                    selectedValue={skillKey}
+                    style={[
+                      modalFormStyles.input,
+                      modalFormStyles.skillInput,
+                      { flex: 1, height: 60 },
+                    ]}
+                    onValueChange={(itemValue) =>
+                      handleSkillSelection(itemValue as string, index)
+                    }
+                  >
+                    <Picker.Item label="Select a stat..." value="" />
+                    {STAT_KEYS.map((key) => (
+                      <Picker.Item
+                        key={key}
+                        label={STAT_OPTIONS[key]}
+                        value={key}
+                      />
+                    ))}
+                  </Picker>
                   {skills.length > 1 && (
                     <Pressable
                       onPress={() => removeSkill(index)}

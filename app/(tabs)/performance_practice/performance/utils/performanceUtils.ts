@@ -67,7 +67,6 @@ type ScoreResult = { stat: string; score: number };
  * @returns An object containing the top 3 attention areas (negative scores) and top 3 excellence areas (positive scores).
  */
 export const analyzePlayerPerformance = (
-  // <-- Function Renamed
   playerId: number,
   allGameRecords: GameRecord[],
   gamesLimit: number
