@@ -14,6 +14,15 @@ import {
 } from "react-native";
 import { LineChart, ProgressChart } from "react-native-chart-kit";
 
+// debugging algorithm
+import drills_list from "../practice/drills_list";
+import {
+  buildForest,
+  predictForestWeighted,
+} from "../practice/randomForestAlgo";
+import trainingSamples from "../practice/trainingSample";
+// end of debug imports
+
 import athlete_list from "./athlete_list";
 import game_record_data from "./game_records";
 
@@ -41,6 +50,52 @@ export default function AthleteDetailScreen() {
   const [excellenceAreas, setExcellenceAreas] = useState<
     { stat: string; score: number }[]
   >([]);
+
+  // holding drill ID for forest algo - DEBUGGING
+  const statKeys = [
+    "FG_PCT",
+    "_2PTS_PCT",
+    "_3PTS_PCT",
+    "FT_PCT",
+    "REB",
+    "assists",
+    "steals",
+    "blocks",
+    "turnovers",
+    "points",
+  ];
+  const STAT_LABELS: { [key: string]: string } = {
+    FG_PCT: "FG% Efficiency",
+    _2PTS_PCT: "2PT% Efficiency",
+    _3PTS_PCT: "3PT% Efficiency",
+    FT_PCT: "FT% Efficiency",
+    REB: "Rebounding (Total)",
+    assists: "Assists",
+    steals: "Steals (Defense)",
+    blocks: "Blocks (Defense)",
+    turnovers: "Turnovers",
+    points: "Scoring (Points)",
+  };
+
+  const forest = buildForest(trainingSamples, statKeys);
+  // Reverse STAT_LABELS to map display labels back to internal stat keys
+  const reverseLabels = Object.fromEntries(
+    Object.entries(STAT_LABELS).map(([key, label]) => [label, key])
+  );
+
+  const attentionScores: { [key: string]: number } = {};
+  attentionPriorities.forEach((item) => {
+    const statKey = reverseLabels[item.stat];
+    if (statKey) {
+      attentionScores[statKey] = Math.abs(item.score);
+    }
+  });
+
+  const predictedDrillIds = predictForestWeighted(
+    forest,
+    attentionScores,
+    drills_list
+  );
 
   useEffect(() => {
     if (athleteId) {
@@ -655,6 +710,24 @@ export default function AthleteDetailScreen() {
               last {actualGamesCharted} games
             </Text>
           </View>
+
+          {/* Drill Recommendations - debugging purposes */}
+
+          {attentionPriorities.length > 0 ? (
+            <>
+              <View style={{ marginTop: 10, paddingBottom: 50 }}>
+                <Text style={{ fontWeight: "bold", color: "#555" }}>
+                  🔍 Predicted Drill IDs:
+                </Text>
+                <Text>{predictedDrillIds.join(", ")}</Text>
+              </View>
+            </>
+          ) : (
+            <Text style={styles.noDataText}>
+              No significant areas needing attention found (performing at or
+              above the average). 🎉
+            </Text>
+          )}
         </>
       )}
     </ScrollView>

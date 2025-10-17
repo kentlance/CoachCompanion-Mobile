@@ -62,6 +62,8 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
   // if to show date picker
   const [isPickerVisible, setPickerVisible] = useState(false);
 
+  const [drillLimit, setDrillLimit] = useState("3"); // default to 3 drills
+
   // for focus selection
   const [selectedCategory, setSelectedCategory] =
     useState<string>("athleteSpecific"); // Default selection
@@ -327,6 +329,7 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
                 />
               </View>
             </View>
+
             {selectedCategory === "practiceCategories" && (
               <View>
                 {practices_list.map((practices_list) => (
@@ -354,6 +357,30 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
               </View>
             )}
           </ScrollView>
+
+          <Text style={modalFormStyles.label}>Limit drills up to:</Text>
+          <TextInput
+            style={modalFormStyles.input}
+            value={drillLimit}
+            onChangeText={(text) => {
+              const num = parseInt(text, 10);
+              if (!isNaN(num) && num >= 1 && num <= 6) {
+                setDrillLimit(text);
+              } else if (text === "") {
+                setDrillLimit("");
+              }
+            }}
+            inputMode="numeric"
+            placeholder="Enter a number between 1 and 6"
+            maxLength={1}
+          />
+          {(drillLimit === "" ||
+            parseInt(drillLimit) < 1 ||
+            parseInt(drillLimit) > 6) && (
+            <Text style={{ color: "red" }}>
+              Please enter a number from 1 to 6.
+            </Text>
+          )}
 
           <View style={modalFormStyles.buttonContainer}>
             <Pressable

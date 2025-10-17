@@ -23,6 +23,108 @@ function splitData(
   return { left, right };
 }
 
+function generateWeights(n: number): number[] {
+  const base = [1.0, 0.7, 0.3, 0.2, 0.1];
+  const slice = base.slice(0, n);
+  const total = slice.reduce((sum, w) => sum + w, 0);
+  return slice.map((w) => w / total); // normalize to sum = 1
+}
+
+function getDrillWeights(drill: { good_for: StatKey[] }): {
+  [key in StatKey]?: number;
+} {
+  const tiers = {
+    1: [1.0],
+    2: [0.7, 0.3],
+    3: [0.5, 0.3, 0.2],
+  };
+  const weights =
+    tiers[drill.good_for.length as 1 | 2 | 3] ??
+    generateWeights(drill.good_for.length);
+
+  const result: { [key in StatKey]?: number } = {};
+  drill.good_for.forEach((stat, i) => {
+    result[stat] = weights[i] ?? 0;
+  });
+  return result;
+}
+
+function scoreDrillAgainstAttention(
+  drill: { id: number; good_for: StatKey[] },
+  attentionScores: { [key in StatKey]?: number }
+): number {
+  const weights = getDrillWeights(drill);
+  let score = 0;
+  for (const stat of drill.good_for) {
+    const attention = attentionScores[stat] ?? 0;
+    score += (weights[stat] ?? 0) * Math.abs(attention);
+  }
+  return score;
+}
+
+export function predictForestWeighted(
+  forest: TreeNode[],
+  input: { [key in StatKey]: number },
+  drills: { id: number; good_for: StatKey[] }[]
+): number[] {
+  const rawVotes: { [id: number]: number } = {};
+  forest.forEach((tree) => {
+    predictTree(tree, input).forEach((id) => {
+      rawVotes[id] = (rawVotes[id] || 0) + 1;
+    });
+  });
+
+  const attentionScores = input;
+  const drillMap = new Map(drills.map((d) => [d.id, d]));
+
+  const scored = Object.entries(rawVotes)
+    .map(([idStr, count]) => {
+      const id = parseInt(idStr);
+      const drill = drillMap.get(id);
+      const relevance = drill
+        ? scoreDrillAgainstAttention(drill, attentionScores)
+        : 0;
+
+      const coverageScore = drill
+        ? drill.good_for.reduce(
+            (sum, stat) => sum + (attentionScores[stat] ?? 0),
+            0
+          )
+        : 0;
+
+      return {
+        id,
+        score: count * relevance,
+        coverageScore,
+        good_for: drill?.good_for ?? [],
+      };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  // Diversity-aware selection with attention weighting
+  const selected: number[] = [];
+  const coveredStats = new Set<StatKey>();
+
+  for (const entry of scored) {
+    const newStats = entry.good_for.filter((stat) => !coveredStats.has(stat));
+    const urgency = newStats.reduce(
+      (sum, stat) => sum + (attentionScores[stat] ?? 0),
+      0
+    );
+
+    // Prefer drills that cover urgent and uncovered stats
+    if (newStats.length > 0 || urgency > 0.5 || selected.length < 3) {
+      selected.push(entry.id);
+      newStats.forEach((stat) => coveredStats.add(stat));
+    }
+
+    if (selected.length >= 6) break;
+  }
+
+  return selected;
+}
+
 function giniImpurity(samples: TrainingSample[]): number {
   const labelCounts: { [id: number]: number } = {};
   samples.forEach((s) => {
@@ -53,7 +155,9 @@ function findBestSplit(
   let bestThreshold = 0;
 
   for (const feature of features) {
-    const thresholds = samples.map((s) => s.features[feature]);
+    const thresholds = Array.from(
+      new Set(samples.map((s) => s.features[feature]))
+    );
     for (const t of thresholds) {
       const { left, right } = splitData(samples, feature, t);
       const score =
@@ -115,7 +219,7 @@ function predictTree(
     : predictTree(tree.right!, input);
 }
 
-function buildForest(
+export function buildForest(
   samples: TrainingSample[],
   features: StatKey[],
   numTrees = 10

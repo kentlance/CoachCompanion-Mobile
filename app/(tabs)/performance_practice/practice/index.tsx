@@ -17,7 +17,9 @@ import GenerateRegimenModal from "./generate_regimen_modal";
 import PracticeCategoryModal from "./practice_category_modal";
 import PracticeFormModal from "./practice_form_modal";
 import practices_list_initial from "./practices";
-
+// debug for generating trainingSamples for algo
+import { generateSyntheticSamples } from "./samples";
+// end debug for generating trainingSamples for algo
 interface PracticeCategory {
   id: number;
   name: string;
@@ -35,6 +37,19 @@ interface DrillItem {
 }
 
 const PracticeScreen: React.FC = () => {
+  const statKeys = [
+    "FG_PCT",
+    "_2PTS_PCT",
+    "_3PTS_PCT",
+    "FT_PCT",
+    "REB",
+    "assists",
+    "steals",
+    "blocks",
+    "turnovers",
+    "points",
+  ];
+
   const [searchQuery, setSearchQuery] = useState("");
   const [drillSearchQuery, setDrillSearchQuery] = useState("");
 
@@ -237,6 +252,21 @@ const PracticeScreen: React.FC = () => {
         {selectedCategoryId === null ? (
           <View style={styles.practices_container}>
             {/** if user is athlete, show assigned regimens, if user is coach, show created regimens */}
+            {/** debug for creating synthetic samples */}
+            <Pressable
+              style={styles.addButton}
+              onPress={() => {
+                const synthetic = generateSyntheticSamples(
+                  drills_list_initial,
+                  statKeys,
+                  50
+                );
+                console.log("Generated synthetic samples:", synthetic);
+              }}
+            >
+              <Text style={styles.addButtonText}>#</Text>
+            </Pressable>
+            {/** end debug for creating synthetic samples */}
 
             <View style={styles.category_header}>
               <Text style={styles.category_text}>Created Regimens</Text>

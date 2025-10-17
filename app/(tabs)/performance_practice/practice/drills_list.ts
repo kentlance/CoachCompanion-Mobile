@@ -175,6 +175,67 @@ const drills_list = [
     // Focus: Improving scoring efficiency from various distances
     good_for: ["FG_PCT", "points", "assists"],
   },
+
+  {
+    id: 14,
+    from_id: 5,
+    name: "Pressure Free Throws",
+    description: "Simulate game pressure while shooting free throws.",
+    steps: [
+      "1. Shoot 2 free throws after a sprint or defensive drill.",
+      "2. Record makes under fatigue.",
+      "3. Repeat for 5 sets.",
+    ],
+    good_for: ["FT_PCT", "points"],
+  },
+  {
+    id: 15,
+    from_id: 6,
+    name: "Rebound Box-Out Drill",
+    description: "Drill to improve positioning and timing for rebounds.",
+    steps: [
+      "1. Pair up with a partner.",
+      "2. Practice boxing out as a shot goes up.",
+      "3. Compete for the rebound and switch roles.",
+    ],
+    good_for: ["REB", "blocks"],
+  },
+  {
+    id: 16,
+    from_id: 7,
+    name: "Isolation Scoring Drill",
+    description: "Drill to improve scoring in one-on-one situations.",
+    steps: [
+      "1. Set up a defender at the top of the key.",
+      "2. Try to score within 5 seconds.",
+      "3. Rotate offense and defense.",
+    ],
+    good_for: ["points", "FG_PCT"],
+  },
+  {
+    id: 17,
+    from_id: 8,
+    name: "Deflection Drill",
+    description: "Drill to improve anticipation and hand speed.",
+    steps: [
+      "1. Partner passes the ball rapidly in front of you.",
+      "2. Try to deflect or intercept each pass.",
+      "3. Focus on reaction time and hand placement.",
+    ],
+    good_for: ["steals"],
+  },
+  {
+    id: 18,
+    from_id: 1,
+    name: "Mid-Range Shooting Drill",
+    description: "Drill to improve consistency and accuracy in 2-point range.",
+    steps: [
+      "1. Set up shooting spots around the key and baseline.",
+      "2. Take 5 shots from each spot.",
+      "3. Focus on balance, form, and follow-through.",
+    ],
+    good_for: ["_2PTS_PCT", "FG_PCT", "points"],
+  },
 ];
 
 export default drills_list;
