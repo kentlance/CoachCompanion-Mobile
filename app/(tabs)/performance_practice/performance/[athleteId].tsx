@@ -23,11 +23,14 @@ import {
 import trainingSamples from "../practice/trainingSample";
 // end of debug imports
 
+// debug assignedregimen
+
 import athlete_list from "./athlete_list";
 import game_record_data from "./game_records";
 
 import { Athlete, GameRecord } from "./interfaces";
 import { analyzePlayerPerformance } from "./utils/performanceUtils";
+
 const screenWidth = Dimensions.get("window").width;
 const CHART_GAMES_LIMIT = 5; // Game limit on charts
 
@@ -717,7 +720,7 @@ export default function AthleteDetailScreen() {
             <>
               <View style={{ marginTop: 10, paddingBottom: 50 }}>
                 <Text style={{ fontWeight: "bold", color: "#555" }}>
-                  🔍 Predicted Drill IDs:
+                  Predicted Drill IDs (debug):
                 </Text>
                 <Text>{predictedDrillIds.join(", ")}</Text>
               </View>
@@ -730,6 +733,10 @@ export default function AthleteDetailScreen() {
           )}
         </>
       )}
+      {/* 
+      <Pressable>My Assigned Regimens</Pressable>
+      <AthleteTrainingRegimens athleteId={parseInt(athleteId as string)} />
+      */}
     </ScrollView>
   );
 }

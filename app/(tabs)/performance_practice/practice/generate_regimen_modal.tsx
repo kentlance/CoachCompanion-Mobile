@@ -358,7 +358,9 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
             )}
           </ScrollView>
 
-          <Text style={modalFormStyles.label}>Limit drills up to:</Text>
+          <Text style={modalFormStyles.label}>
+            Limit drills assigned to one athlete up to:
+          </Text>
           <TextInput
             style={modalFormStyles.input}
             value={drillLimit}
@@ -396,7 +398,11 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
             >
               {/** On press, check if all fields are filled. Then, generate drills using algorithm for each assigned athlete
                * Then save regimen to database, move to Athlete Training Regimens page to show the newly created regimen
-               */}
+               *
+               * create new Regimen entry
+               * create new AthleteRegimen entry for each athlete assigned
+               * Algorithm will give at most 6 drills, slice for drillLimit
+               * */}
               <Text style={modalFormStyles.buttonText}>{saveButtonText}</Text>
             </Pressable>
           </View>

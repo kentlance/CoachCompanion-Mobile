@@ -1,25 +1,32 @@
-// lists regimens (coach view)
-// -- athletes assigned to it with status (assigned, missing, done)
+import React from "react";
+import { View } from "react-native";
+import regimens from "../regimens";
+import RegimenCard from "./regimen_card";
 
+const TrainingRegimens = () => {
+  // Dummy handlers for placeholder buttons
+  const handleEdit = (id: number) => {
+    console.log("Edit Regimen:", id);
+    // TODO: Implement actual edit logic
+  };
 
-/*
+  const handleDelete = (id: number, name: string) => {
+    console.log("Delete Regimen:", id, name);
+    // implement delete logic later
+  };
 
-REGIMENS table:
-id:
-name
-duration
-due_date
-assigned_athletes {}
-focus {}
-drills {}
+  return (
+    <View>
+      {regimens.map((item) => (
+        <RegimenCard
+          key={item.id.toString()}
+          item={item}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      ))}
+    </View>
+  );
+};
 
-ATHLETE_REGIMENS table:
-id:
-from_regimen (reference REGIMENS table)
-assigned_athlete_id (reference athlete ID)
-drills_status {} (references drills id + status like {"Shooting Steps:  1. Shoot", "missing"} or maybe just the drill id)
-regimen_status (status of regimen as whole if DONE, MISSING, ASSIGNED)
-
-
-
-*/
+export default TrainingRegimens;

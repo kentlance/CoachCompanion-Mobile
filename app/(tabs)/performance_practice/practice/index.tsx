@@ -2,9 +2,9 @@
 import React, { useState } from "react";
 import {
   Alert,
-  FlatList,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,9 +14,11 @@ import DrillFormModal from "./drill_form_modal";
 import DrillModal from "./drill_modal";
 import drills_list_initial from "./drills_list";
 import GenerateRegimenModal from "./generate_regimen_modal";
-import PracticeCategoryModal from "./practice_category_modal";
+import PracticeCategoryModal from "./practice_category_card";
 import PracticeFormModal from "./practice_form_modal";
 import practices_list_initial from "./practices";
+import TrainingRegimen from "./regimen/training_regimens";
+
 // debug for generating trainingSamples for algo
 import { generateSyntheticSamples } from "./samples";
 // end debug for generating trainingSamples for algo
@@ -250,7 +252,7 @@ const PracticeScreen: React.FC = () => {
     <View style={{ flex: 1, backgroundColor: "#f0f0f0" }}>
       <View style={{ flex: 1 }}>
         {selectedCategoryId === null ? (
-          <View style={styles.practices_container}>
+          <ScrollView style={styles.practices_container}>
             {/** if user is athlete, show assigned regimens, if user is coach, show created regimens */}
             {/** debug for creating synthetic samples */}
             <Pressable
@@ -268,9 +270,13 @@ const PracticeScreen: React.FC = () => {
             </Pressable>
             {/** end debug for creating synthetic samples */}
 
-            <View style={styles.category_header}>
-              <Text style={styles.category_text}>Created Regimens</Text>
+            <View>
+              <View style={styles.category_header}>
+                <Text style={styles.category_text}>Created Regimens</Text>
+              </View>
+              <TrainingRegimen />
             </View>
+
             <View style={styles.category_header}>
               <Text style={styles.category_text}>Practice Regimens</Text>
             </View>
@@ -290,24 +296,8 @@ const PracticeScreen: React.FC = () => {
               </Text>
             </View>
 
-            {/** Floating button */}
-            <View style={styles.floatingButtonsContainer}>
-              <Pressable
-                style={styles.addButton}
-                onPress={handleShowGenerateRegimenModal}
-              >
-                <Text style={styles.addButtonText}>@</Text>
-              </Pressable>
-
-              <Pressable onPress={handleAddPractice} style={styles.addButton}>
-                <Text style={styles.addButtonText}>+</Text>
-              </Pressable>
-            </View>
-
-            <FlatList
-              data={filteredPractices}
-              keyExtractor={(item: PracticeCategory) => item.id.toString()}
-              renderItem={({ item: practice }: { item: PracticeCategory }) => (
+            {filteredPractices.length > 0 ? (
+              filteredPractices.map((practice) => (
                 <Pressable
                   key={practice.id}
                   onPress={() => handleCategorySelect(practice.id)}
@@ -321,13 +311,11 @@ const PracticeScreen: React.FC = () => {
                     onDelete={handleDeletePractice}
                   />
                 </Pressable>
-              )}
-              contentContainerStyle={styles.flatListContent}
-              ListEmptyComponent={() => (
-                <Text style={styles.noPracticesText}>No practices found.</Text>
-              )}
-            />
-          </View>
+              ))
+            ) : (
+              <Text style={styles.noPracticesText}>No practices found.</Text>
+            )}
+          </ScrollView>
         ) : (
           <View style={styles.drills_screen_container}>
             <Pressable
@@ -365,10 +353,10 @@ const PracticeScreen: React.FC = () => {
             </View>
 
             {filteredDrills.length > 0 ? (
-              <FlatList
-                data={filteredDrills}
-                renderItem={({ item }: { item: DrillItem }) => (
+              <View style={styles.filteredDrillsContent}>
+                {filteredDrills.map((item) => (
                   <Pressable
+                    key={item.id}
                     onPress={() => handleDrillPress(item)}
                     style={styles.drill_container}
                   >
@@ -392,10 +380,8 @@ const PracticeScreen: React.FC = () => {
                       <Text style={styles.editButtonText}>Edit</Text>
                     </Pressable>
                   </Pressable>
-                )}
-                keyExtractor={(item: DrillItem) => item.id.toString()}
-                contentContainerStyle={styles.flatListContent}
-              />
+                ))}
+              </View>
             ) : (
               <Text style={styles.noDrillsText}>
                 No drills found for this category or search.
@@ -403,6 +389,20 @@ const PracticeScreen: React.FC = () => {
             )}
           </View>
         )}
+      </View>
+
+      {/** Floating button */}
+      <View style={styles.floatingButtonsContainer}>
+        <Pressable
+          style={styles.addButton}
+          onPress={handleShowGenerateRegimenModal}
+        >
+          <Text style={styles.addButtonText}>@</Text>
+        </Pressable>
+
+        <Pressable onPress={handleAddPractice} style={styles.addButton}>
+          <Text style={styles.addButtonText}>+</Text>
+        </Pressable>
       </View>
       <Modal
         visible={isDrillModalVisible}
@@ -450,8 +450,12 @@ const styles = StyleSheet.create({
   practices_container: {
     padding: 10,
     flex: 1,
+    height: "100%",
   },
   category_header: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
     justifyContent: "center",
     backgroundColor: "#fff",
     height: 70,
@@ -461,6 +465,7 @@ const styles = StyleSheet.create({
   },
   category_text: {
     textAlign: "center",
+    fontWeight: "bold",
     fontSize: 20,
   },
   search_input: {
@@ -564,7 +569,7 @@ const styles = StyleSheet.create({
   practice_category_container: {
     alignItems: "center",
   },
-  flatListContent: {
+  filteredDrillsContent: {
     paddingBottom: 20,
   },
   noDrillsText: {

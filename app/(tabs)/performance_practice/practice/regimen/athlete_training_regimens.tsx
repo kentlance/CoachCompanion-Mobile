@@ -1,110 +1,120 @@
 // this view shows regimens assigned to a specific athlete
 // requires ID of athlete
+// show athleteRegimens table, all assigned to that athlete
 
 // lists regimens assigned to athlete with that ID.
-// assigned, missing, done collapsible flash-list
+// assigned, missing, done similar to google classroom
 
-// regimen will be showed as list items [NAME] [DUE DATE] inside each regimen list item
-/*
-import { FlashList } from "@shopify/flash-list";
+// when click on regimen, opens the assigned_regimen.tsx view
+
 import React, { useState } from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import regimens from "../regimens";
+import AssignedRegimenModal from "./assigned_regimen";
+import assignedRegimens from "./assignedRegimens";
 
-const RegimensList = ({ regimens, athleteId }) => {
-  const [collapsed, setCollapsed] = useState({
-    assigned: true,
-    missing: true,
-    done: true,
-  });
+interface AthleteTrainingRegimensProps {
+  athleteId: number; // pass in the athlete ID (e.g., 2)
+}
 
-  const toggleCollapse = (status) => {
-    setCollapsed((prevCollapsed) => ({
-      ...prevCollapsed,
-      [status]: !prevCollapsed[status],
-    }));
-  };
+const AthleteTrainingRegimens: React.FC<AthleteTrainingRegimensProps> = ({
+  athleteId,
+}) => {
+  // filter regimens assigned to this athlete
+  const athleteRegimens = assignedRegimens.filter(
+    (r) => r.assignedAthleteId === athleteId
+  );
 
-  const renderItem = ({ item }) => {
-    const {
-      name,
-      duration,
-      due_date,
-      assigned_athletes,
-      focus,
-      drills,
-      status,
-    } = item;
-
-    const renderDrills = () => (
-      <View style={{ padding: 10 }}>
-        <Text>Drills:</Text>
-        <FlatList
-          data={drills}
-          renderItem={({ item: drill }) => (
-            <View style={{ padding: 10 }}>
-              <Text>{drill.name}</Text>
-              <Text>Status: {drill.status}</Text>
-            </View>
-          )}
-          keyExtractor={(drill) => drill.id.toString()}
-        />
-      </View>
-    );
-
-    return (
-      <TouchableOpacity onPress={() => toggleCollapse(status)}>
-        <View style={{ padding: 10 }}>
-          <Text>{name}</Text>
-          {collapsed[status] && (
-            <>
-              <Text>Duration: {duration}</Text>
-              <Text>Due Date: {due_date}</Text>
-              <Text>Assigned Athletes: {assigned_athletes.join(", ")}</Text>
-              <Text>Focus: {focus.join(", ")}</Text>
-              {status === "assigned" && renderDrills()}
-            </>
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  const [selectedRegimenId, setSelectedRegimenId] = useState<number | null>(
+    null
+  );
 
   return (
-    <View>
-      <TouchableOpacity onPress={() => toggleCollapse("assigned")}>
-        <Text>
-          Assigned ({regimens.filter((r) => r.status === "assigned").length})
-        </Text>
-      </TouchableOpacity>
-      <FlashList
-        data={regimens.filter((r) => r.status === "assigned")}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-      />
-      <TouchableOpacity onPress={() => toggleCollapse("missing")}>
-        <Text>
-          Missing ({regimens.filter((r) => r.status === "missing").length})
-        </Text>
-      </TouchableOpacity>
-      <FlashList
-        data={regimens.filter((r) => r.status === "missing")}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-      />
-      <TouchableOpacity onPress={() => toggleCollapse("done")}>
-        <Text>Done ({regimens.filter((r) => r.status === "done").length})</Text>
-      </TouchableOpacity>
-      <FlashList
-        data={regimens.filter((r) => r.status === "done")}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-      />
+    <View style={styles.container}>
+      <Text style={styles.title}>My Training Regimens</Text>
+
+      {athleteRegimens.length === 0 ? (
+        <Text style={styles.emptyText}>No regimens assigned yet.</Text>
+      ) : (
+        <FlatList
+          data={athleteRegimens}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => {
+            const regimen = regimens.find((r) => r.id === item.regimenId);
+            return (
+              <Pressable
+                style={styles.card}
+                onPress={() => setSelectedRegimenId(item.id)}
+              >
+                <Text style={styles.cardTitle}>{regimen?.name}</Text>
+                <Text>Due: {regimen?.due_date}</Text>
+                <Text>Status: {item.regimenStatus}</Text>
+              </Pressable>
+            );
+          }}
+        />
+      )}
+
+      {/* Modal for detailed regimen view */}
+      <Modal visible={!!selectedRegimenId} animationType="slide">
+        {selectedRegimenId && (
+          <AssignedRegimenModal assignedRegimenId={selectedRegimenId} />
+        )}
+        <Pressable
+          style={styles.closeButton}
+          onPress={() => setSelectedRegimenId(null)}
+        >
+          <Text style={styles.closeText}>Close</Text>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
 
-export default RegimensList;
-*/
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginTop: 32,
+  },
+  card: {
+    padding: 16,
+    marginVertical: 8,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+  },
+  cardTitle: {
+    fontWeight: "bold",
+    fontSize: 18,
+    marginBottom: 4,
+  },
+  closeButton: {
+    padding: 12,
+    backgroundColor: "#e53935",
+    alignItems: "center",
+  },
+  closeText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+});
+
+export default AthleteTrainingRegimens;
