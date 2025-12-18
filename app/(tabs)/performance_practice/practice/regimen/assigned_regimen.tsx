@@ -37,10 +37,13 @@ const AssignedRegimenModal: React.FC<Props> = ({ assignedRegimenId }) => {
   );
 
   const [selectedDrill, setSelectedDrill] = useState<any | null>(null);
+  const [selectedDrillIndex, setSelectedDrillIndex] = useState<number | null>(
+    null
+  );
 
-  const markDrillCompleted = (index: number) => {
+  const toggleDrillStatus = (index: number) => {
     const updated = [...drillStatuses];
-    updated[index] = "completed";
+    updated[index] = updated[index] === "completed" ? "assigned" : "completed";
     setDrillStatuses(updated);
   };
 
@@ -76,15 +79,26 @@ const AssignedRegimenModal: React.FC<Props> = ({ assignedRegimenId }) => {
               </View>
               {drillStatuses[index] !== "completed" && (
                 <Pressable
-                  style={styles.button}
-                  onPress={() => markDrillCompleted(index)}
+                  style={[
+                    styles.button,
+                    drillStatuses[index] === "completed" &&
+                      styles.buttonCompleted,
+                  ]}
+                  onPress={() => toggleDrillStatus(index)}
                 >
-                  <Text style={styles.buttonText}>Mark Completed</Text>
+                  <Text style={styles.buttonText}>
+                    {drillStatuses[index] === "completed"
+                      ? "Completed"
+                      : "Mark Completed"}
+                  </Text>
                 </Pressable>
               )}
               <Pressable
                 style={styles.detailsButton}
-                onPress={() => setSelectedDrill(drill)}
+                onPress={() => {
+                  setSelectedDrill(drill);
+                  setSelectedDrillIndex(index);
+                }}
               >
                 <Text style={styles.buttonText}>View</Text>
               </Pressable>
@@ -99,10 +113,12 @@ const AssignedRegimenModal: React.FC<Props> = ({ assignedRegimenId }) => {
 
       {/* Drill Modal */}
       <Modal visible={!!selectedDrill} animationType="slide">
-        {selectedDrill && (
+        {selectedDrill && selectedDrillIndex !== null && (
           <DrillModal
             drill={selectedDrill}
             onClose={() => setSelectedDrill(null)}
+            showCompleteButton={true}
+            onMarkComplete={() => toggleDrillStatus(selectedDrillIndex)}
           />
         )}
       </Modal>
@@ -155,6 +171,9 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontWeight: "bold",
+  },
+  buttonCompleted: {
+    backgroundColor: "#9e9e9e",
   },
 });
 

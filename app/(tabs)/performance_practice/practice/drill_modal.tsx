@@ -24,13 +24,20 @@ interface DrillModalProps {
     good_for?: string[];
   };
   onClose: () => void;
+  showCompleteButton?: boolean; // when viewed from athlete regimen screen
+  onMarkComplete?: (drillId: number) => void;
 }
 const getStatDisplayName = (statKey: string): string => {
   // If not found default to the key itself.
   return STAT_OPTIONS[statKey] || statKey;
 };
 
-export default function DrillModal({ drill, onClose }: DrillModalProps) {
+export default function DrillModal({
+  drill,
+  onClose,
+  showCompleteButton = false,
+  onMarkComplete,
+}: DrillModalProps) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -75,6 +82,14 @@ export default function DrillModal({ drill, onClose }: DrillModalProps) {
               })}
             </View>
           </View>
+        )}
+        {showCompleteButton && (
+          <Pressable
+            style={styles.completeButton}
+            onPress={() => onMarkComplete?.(drill.id)}
+          >
+            <Text style={styles.completeButtonText}>Mark as Completed</Text>
+          </Pressable>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -150,5 +165,17 @@ const styles = StyleSheet.create({
   skillText: {
     color: "#000",
     fontSize: 14,
+  },
+  completeButton: {
+    backgroundColor: "#4caf50",
+    padding: 12,
+    borderRadius: 6,
+    marginTop: 20,
+    alignItems: "center",
+  },
+  completeButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });

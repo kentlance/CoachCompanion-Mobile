@@ -1,4 +1,5 @@
 // show regimen (for coach view, list all regimens)
+// when a regimen is clicked show the assigned_regimen then coach can edit (modify drills), delete
 
 import React from "react";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
@@ -70,11 +71,10 @@ const RegimenCard: React.FC<RegimenCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    // Adopted from PracticeCategoryModal styles
     backgroundColor: "white",
     borderRadius: 20,
     width: screenWidth * 0.9,
-    alignSelf: "center", // Center the card
+    alignSelf: "center",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -84,22 +84,21 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     position: "relative",
-    paddingBottom: 20, // Add space at the bottom for content
+    paddingBottom: 20,
     paddingTop: 10,
     overflow: "hidden",
-    marginBottom: 15, // Space between cards
+    marginBottom: 15,
   },
   text_container: {
     marginLeft: 20,
-    marginRight: 20, // Increased margin to prevent overlap with buttons
+    marginRight: 20,
     marginTop: 10,
   },
   regimen_name: {
-    fontSize: 18, // Slightly larger for the title
+    fontSize: 18,
     fontWeight: "bold",
     marginBottom: 5,
   },
-  // --- Action Button Styles (Copied/Adapted) ---
   actionButtonsContainer: {
     position: "absolute",
     top: 10,

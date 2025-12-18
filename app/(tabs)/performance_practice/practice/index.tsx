@@ -22,6 +22,8 @@ import TrainingRegimen from "./regimen/training_regimens";
 // debug for generating trainingSamples for algo
 import { generateSyntheticSamples } from "./samples";
 // end debug for generating trainingSamples for algo
+
+// add "image" for Practice
 interface PracticeCategory {
   id: number;
   name: string;
@@ -397,6 +399,7 @@ const PracticeScreen: React.FC = () => {
           style={styles.addButton}
           onPress={handleShowGenerateRegimenModal}
         >
+          {/** REMINDER change this to generate button image */}
           <Text style={styles.addButtonText}>@</Text>
         </Pressable>
 

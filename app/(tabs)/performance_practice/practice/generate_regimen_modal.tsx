@@ -48,26 +48,15 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
   initialRegimen: initialDrill,
 }) => {
   const [name, setName] = useState("");
-  const [duration, setDuration] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [assignedAthletes, setAssignedAthletes] = useState<string[]>([""]);
-  const [focus, setFocus] = useState<string[]>([""]);
-  // add algorithm that chooses drills
-  const [drills, setDrills] = useState<string[]>([""]);
-
-  // date
   const [date, setDate] = useState(new Date());
-  // if picking date or time
   const [pickerMode, setPickerMode] = useState<"date" | "time" | null>(null);
-  // if to show date picker
   const [isPickerVisible, setPickerVisible] = useState(false);
-
-  const [drillLimit, setDrillLimit] = useState("3"); // default to 3 drills
-
-  // for focus selection
+  const [drillLimit, setDrillLimit] = useState("3");
   const [selectedCategory, setSelectedCategory] =
-    useState<string>("athleteSpecific"); // Default selection
-  const [selectedPractices, setSelectedPractices] = useState<number[]>([]); // Default selection
+    useState<string>("athleteSpecific");
+  const [selectedPractices, setSelectedPractices] = useState<number[]>([]);
+  const [selectedAthletes, setSelectedAthletes] = useState<string[]>(["All"]);
+  const [assignmentType, setAssignmentType] = useState("all");
 
   const startDateTimeSelection = () => {
     setPickerMode("date");
@@ -91,27 +80,12 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
         const updatedDateTime = new Date(date);
         updatedDateTime.setHours(value.getHours());
         updatedDateTime.setMinutes(value.getMinutes());
-
-        // Optional: enforce minimum datetime
         if (updatedDateTime >= new Date()) {
           setDate(updatedDateTime);
         }
       }
     }
   };
-
-  const openPicker = (mode: "date" | "time") => {
-    setPickerMode(mode);
-    setPickerVisible(true);
-  };
-
-  // first get list of all athletes from database
-
-  const modalTitle = initialDrill ? "Edit Regimen" : "Generate Regimen";
-  const saveButtonText = initialDrill ? "Update" : "Add";
-
-  const [selectedAthletes, setSelectedAthletes] = useState<string[]>(["All"]); // Default selection
-  const [assignmentType, setAssignmentType] = useState("all");
 
   const handleCheckboxChange = (athleteId: string) => {
     setSelectedAthletes((prevSelected) => {
@@ -144,6 +118,9 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
     }
   };
 
+  const modalTitle = initialDrill ? "Edit Regimen" : "Generate Regimen";
+  const saveButtonText = initialDrill ? "Update" : "Add";
+
   return (
     <Modal
       animationType="fade"
@@ -154,7 +131,11 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
       <View style={modalFormStyles.centeredView}>
         <View style={modalFormStyles.modalView}>
           <Text style={modalFormStyles.modalTitle}>{modalTitle}</Text>
-          <ScrollView style={modalFormStyles.scrollView}>
+
+          <ScrollView
+            style={modalFormStyles.scrollView}
+            showsVerticalScrollIndicator={false}
+          >
             <Text style={modalFormStyles.label}>Training Regimen Name</Text>
             <TextInput
               style={modalFormStyles.input}
@@ -162,6 +143,8 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
               onChangeText={setName}
               maxLength={50}
             />
+
+            <View style={modalFormStyles.separator} />
 
             <Text style={modalFormStyles.label}>Duration</Text>
             <TextInput
@@ -171,104 +154,104 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
               maxLength={50}
             />
 
-            <View style={modalFormStyles.section}>
-              <View style={modalFormStyles.sectionHeader}>
-                <Text style={modalFormStyles.label}>Due Date</Text>
-              </View>
-              <Pressable
-                onPress={startDateTimeSelection}
-                style={modalFormStyles.input_text}
-              >
-                <Text>{date.toLocaleString()}</Text>
-              </Pressable>
-
-              {isPickerVisible && pickerMode && (
-                <DateTimePicker
-                  value={date}
-                  mode={pickerMode}
-                  display="default"
-                  minimumDate={new Date()}
-                  is24Hour={false}
-                  onChange={handlePickerChange}
-                />
-              )}
-            </View>
-
-            <Text style={modalFormStyles.label}>Assign to: </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginVertical: 5,
-              }}
+            <View style={modalFormStyles.separator} />
+            <Text style={modalFormStyles.label}>Due Date</Text>
+            <Pressable
+              onPress={startDateTimeSelection}
+              style={modalFormStyles.input_text}
             >
-              <Pressable onPress={() => setAssignmentType("all")}>
-                <Text style={{ marginRight: 10 }}>All</Text>
-              </Pressable>
+              <Text style={{ color: "#333" }}>{date.toLocaleString()}</Text>
+            </Pressable>
+
+            {isPickerVisible && pickerMode && (
+              <DateTimePicker
+                value={date}
+                mode={pickerMode}
+                display="default"
+                minimumDate={new Date()}
+                is24Hour={false}
+                onChange={handlePickerChange}
+              />
+            )}
+
+            <View style={modalFormStyles.separator} />
+
+            <Text style={modalFormStyles.label}>Assign to:</Text>
+
+            <Pressable
+              style={modalFormStyles.radioGroup}
+              onPress={() => setAssignmentType("all")}
+            >
+              <Text style={modalFormStyles.listItemText}>All Athletes</Text>
               <Checkbox
                 value={assignmentType === "all"}
                 onValueChange={() => setAssignmentType("all")}
+                color="#EC1D25"
               />
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginVertical: 5,
-              }}
+            </Pressable>
+
+            <Pressable
+              style={modalFormStyles.radioGroup}
+              onPress={() => setAssignmentType("positions")}
             >
-              <Pressable onPress={() => setAssignmentType("positions")}>
-                <Text style={{ marginRight: 10 }}>Positions</Text>
-              </Pressable>
+              <Text style={modalFormStyles.listItemText}>By Positions</Text>
               <Checkbox
                 value={assignmentType === "positions"}
                 onValueChange={() => setAssignmentType("positions")}
+                color="#EC1D25"
               />
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginVertical: 5,
-              }}
+            </Pressable>
+
+            <Pressable
+              style={modalFormStyles.radioGroup}
+              onPress={() => setAssignmentType("custom")}
             >
-              <Pressable onPress={() => setAssignmentType("custom")}>
-                <Text style={{ marginRight: 10, paddingBottom: 10 }}>
-                  Custom
-                </Text>
-              </Pressable>
+              <Text style={modalFormStyles.listItemText}>Custom Selection</Text>
               <Checkbox
                 value={assignmentType === "custom"}
                 onValueChange={() => setAssignmentType("custom")}
+                color="#EC1D25"
               />
-            </View>
+            </Pressable>
 
             {assignmentType === "positions" && (
-              <View>
-                {Array.from(
-                  new Set(athleteList.map((athlete) => athlete.position))
-                ).map((position: string) => (
-                  <Pressable
-                    key={position}
-                    style={modalFormStyles.listItem}
-                    onPress={() => handleCheckboxChange(position)}
-                  >
-                    <Text style={modalFormStyles.listItemText}>{position}</Text>
-                    <Checkbox
-                      value={selectedAthletes.includes(position)}
-                      onValueChange={() => handleCheckboxChange(position)}
-                    />
-                  </Pressable>
-                ))}
+              <View style={{ marginTop: 10 }}>
+                {Array.from(new Set(athleteList.map((a) => a.position))).map(
+                  (position) => (
+                    <Pressable
+                      key={position}
+                      style={[
+                        modalFormStyles.listItem,
+                        selectedAthletes.includes(position) &&
+                          modalFormStyles.selectedListItem,
+                      ]}
+                      onPress={() => handleCheckboxChange(position)}
+                    >
+                      <Text style={modalFormStyles.listItemText}>
+                        {position}
+                      </Text>
+                      <Checkbox
+                        value={selectedAthletes.includes(position)}
+                        onValueChange={() => handleCheckboxChange(position)}
+                        color="#EC1D25"
+                      />
+                    </Pressable>
+                  )
+                )}
               </View>
             )}
 
             {assignmentType === "custom" && (
-              <View style={{ paddingBottom: 10 }}>
+              <View style={{ marginTop: 10 }}>
                 {athleteList.map((athlete: Athlete) => (
                   <Pressable
                     key={athlete.athlete_no}
-                    style={modalFormStyles.listItem}
+                    style={[
+                      modalFormStyles.listItem,
+                      selectedAthletes.includes(
+                        athlete.athlete_no.toString()
+                      ) && modalFormStyles.selectedListItem,
+                    ]}
                     onPress={() =>
                       handleCheckboxChange(athlete.athlete_no.toString())
                     }
@@ -283,115 +266,96 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
                       onValueChange={() =>
                         handleCheckboxChange(athlete.athlete_no.toString())
                       }
+                      color="#EC1D25"
                     />
                   </Pressable>
                 ))}
               </View>
             )}
-            <Text style={modalFormStyles.label}>Focus:</Text>
-            <View>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginVertical: 5,
-                }}
-              >
-                <Pressable
-                  onPress={() => handleCategoryChange("athleteSpecific")}
-                >
-                  <Text style={{ marginRight: 10 }}>Athlete Specific</Text>
-                </Pressable>
-                <Checkbox
-                  value={selectedCategory === "athleteSpecific"}
-                  onValueChange={() => handleCategoryChange("athleteSpecific")}
-                />
-              </View>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginVertical: 5,
-                }}
-              >
-                <Pressable
-                  onPress={() => handleCategoryChange("practiceCategories")}
-                >
-                  <Text style={{ marginRight: 10, paddingBottom: 10 }}>
-                    Practice Categories
-                  </Text>
-                </Pressable>
-                <Checkbox
-                  value={selectedCategory === "practiceCategories"}
-                  onValueChange={() =>
-                    handleCategoryChange("practiceCategories")
-                  }
-                />
-              </View>
-            </View>
+
+            <View style={modalFormStyles.separator} />
+
+            <Text style={modalFormStyles.label}>Focus Area:</Text>
+            <Pressable
+              style={modalFormStyles.radioGroup}
+              onPress={() => handleCategoryChange("athleteSpecific")}
+            >
+              <Text style={modalFormStyles.listItemText}>Athlete Specific</Text>
+              <Checkbox
+                value={selectedCategory === "athleteSpecific"}
+                onValueChange={() => handleCategoryChange("athleteSpecific")}
+                color="#EC1D25"
+              />
+            </Pressable>
+
+            <Pressable
+              style={modalFormStyles.radioGroup}
+              onPress={() => handleCategoryChange("practiceCategories")}
+            >
+              <Text style={modalFormStyles.listItemText}>
+                Practice Categories
+              </Text>
+              <Checkbox
+                value={selectedCategory === "practiceCategories"}
+                onValueChange={() => handleCategoryChange("practiceCategories")}
+                color="#EC1D25"
+              />
+            </Pressable>
 
             {selectedCategory === "practiceCategories" && (
-              <View>
-                {practices_list.map((practices_list) => (
+              <View style={{ marginTop: 10 }}>
+                {practices_list.map((practice) => (
                   <Pressable
-                    key={practices_list.id}
-                    style={modalFormStyles.listItem}
-                    onPress={() => togglePracticeSelection(practices_list.id)}
+                    key={practice.id}
+                    style={[
+                      modalFormStyles.listItem,
+                      selectedPractices.includes(practice.id) &&
+                        modalFormStyles.selectedListItem,
+                    ]}
+                    onPress={() => togglePracticeSelection(practice.id)}
                   >
                     <Text style={modalFormStyles.listItemText}>
-                      {practices_list.name}
+                      {practice.name}
                     </Text>
                     <Checkbox
-                      value={selectedPractices.includes(practices_list.id)}
-                      onValueChange={() =>
-                        togglePracticeSelection(practices_list.id)
-                      }
+                      value={selectedPractices.includes(practice.id)}
+                      onValueChange={() => togglePracticeSelection(practice.id)}
+                      color="#EC1D25"
                     />
                   </Pressable>
                 ))}
                 {selectedPractices.length >= 3 && (
-                  <Text style={{ color: "red" }}>
+                  <Text
+                    style={{ color: "#EC1D25", fontSize: 12, marginTop: 5 }}
+                  >
                     You can select up to 3 categories only.
                   </Text>
                 )}
               </View>
             )}
-          </ScrollView>
 
-          <Text style={modalFormStyles.label}>
-            Limit drills assigned to one athlete up to:
-          </Text>
-          <TextInput
-            style={modalFormStyles.input}
-            value={drillLimit}
-            onChangeText={(text) => {
-              const num = parseInt(text, 10);
-              if (!isNaN(num) && num >= 1 && num <= 6) {
-                setDrillLimit(text);
-              } else if (text === "") {
-                setDrillLimit("");
-              }
-            }}
-            inputMode="numeric"
-            placeholder="Enter a number between 1 and 6"
-            maxLength={1}
-          />
-          {(drillLimit === "" ||
-            parseInt(drillLimit) < 1 ||
-            parseInt(drillLimit) > 6) && (
-            <Text style={{ color: "red" }}>
-              Please enter a number from 1 to 6.
-            </Text>
-          )}
+            <View style={modalFormStyles.separator} />
+
+            <Text style={modalFormStyles.label}>Max Drills Per Athlete</Text>
+            <TextInput
+              style={modalFormStyles.input}
+              value={drillLimit}
+              onChangeText={setDrillLimit}
+              inputMode="numeric"
+              placeholder="1-6"
+              maxLength={1}
+            />
+          </ScrollView>
 
           <View style={modalFormStyles.buttonContainer}>
             <Pressable
               style={[modalFormStyles.button, modalFormStyles.buttonCancel]}
               onPress={onClose}
             >
-              <Text style={modalFormStyles.buttonText}>Cancel</Text>
+              <Text style={[modalFormStyles.buttonText, { color: "#666" }]}>
+                Cancel
+              </Text>
             </Pressable>
-
             <Pressable
               style={[modalFormStyles.button, modalFormStyles.buttonSave]}
               onPress={handleSave}
