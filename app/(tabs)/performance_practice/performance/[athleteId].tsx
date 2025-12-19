@@ -1,11 +1,10 @@
 // app/performance_practice/performance/[athleteId].tsx
-import { Stack, useLocalSearchParams } from "expo-router";
+import Feather from "@expo/vector-icons/Feather";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
-  Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,7 +12,6 @@ import {
   View,
 } from "react-native";
 import { LineChart, ProgressChart } from "react-native-chart-kit";
-
 // debugging algorithm
 import drills_list from "../practice/drills_list";
 import {
@@ -36,6 +34,7 @@ const CHART_GAMES_LIMIT = 5; // Game limit on charts
 
 export default function AthleteDetailScreen() {
   const { athleteId } = useLocalSearchParams();
+  const router = useRouter(); // Initialize the router for the back button
   const [athlete, setAthlete] = useState<Athlete | null>(null);
   const [athleteGameRecords, setAthleteGameRecords] = useState<GameRecord[]>(
     []
@@ -153,6 +152,26 @@ export default function AthleteDetailScreen() {
       title: title, // Pass title for chart rendering
     };
   };
+
+  const StatGridItem = ({
+    label,
+    value,
+    highlight = false,
+    isNegative = false,
+  }: any) => (
+    <View style={styles.gridItem}>
+      <Text style={styles.gridLabel}>{label}</Text>
+      <Text
+        style={[
+          styles.gridValue,
+          highlight && { color: "#EC1D25" },
+          isNegative && value > 3 && { color: "#f39c12" },
+        ]}
+      >
+        {value}
+      </Text>
+    </View>
+  );
 
   const getTotalReboundsPerGameData = () => {
     const recordsToChart = athleteGameRecords
@@ -327,15 +346,21 @@ export default function AthleteDetailScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerTitle: `${athlete.first_name} ${athlete.second_name}'s Performance`,
-        }}
-      />
+      <Stack.Screen />
 
-      <Text style={styles.playerName}>
-        {athlete.first_name} {athlete.second_name} (#{athlete.player_no})
-      </Text>
+      <View style={styles.headerCard}>
+        <View style={styles.avatarContainer}>
+          <Feather name="user" size={40} color="#fff" />
+        </View>
+        <View style={styles.headerInfo}>
+          <Text style={styles.playerName}>
+            {athlete.first_name} {athlete.second_name}
+          </Text>
+          <Text style={styles.playerSub}>
+            #{athlete.player_no} • {athlete.position || "Athlete"}
+          </Text>
+        </View>
+      </View>
 
       {totalGamesPlayed === 0 ? (
         <Text style={styles.noDataText}>
@@ -343,123 +368,113 @@ export default function AthleteDetailScreen() {
         </Text>
       ) : (
         <>
-          <View style={styles.statsCard}>
+          <View style={styles.card}>
             <Text style={styles.sectionTitle}>
-              Overall Stats ({totalGamesPlayed} Games)
+              Career Totals ({totalGamesPlayed} Games)
             </Text>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Points:</Text>
-              <Text style={styles.statValue}>{totalPoints}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Rebounds:</Text>
-              <Text style={styles.statValue}>{totalRebounds}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Assists:</Text>
-              <Text style={styles.statValue}>{totalAssists}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Steals:</Text>
-              <Text style={styles.statValue}>{totalSteals}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Blocks:</Text>
-              <Text style={styles.statValue}>{totalBlocks}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Turnovers:</Text>
-              <Text style={styles.statValue}>{totalTurnovers}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Fouls:</Text>
-              <Text style={styles.statValue}>{totalFouls}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>FG%:</Text>
-              <Text style={styles.statValue}>
-                {calculatePercentage(totalMadeFG, totalAttemptFG)}%
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>3PT%:</Text>
-              <Text style={styles.statValue}>
-                {calculatePercentage(totalMade3PTS, totalAttempt3PTS)}%
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>FT%:</Text>
-              <Text style={styles.statValue}>
-                {calculatePercentage(totalMadeFT, totalAttemptFT)}%
-              </Text>
+            <View style={styles.summaryGrid}>
+              <StatGridItem label="Points" value={totalPoints} highlight />
+              <StatGridItem label="Assists" value={totalAssists} />
+              <StatGridItem label="Rebounds" value={totalRebounds} />
+              <StatGridItem label="Steals" value={totalSteals} />
+              <StatGridItem label="Blocks" value={totalBlocks} />
+              <StatGridItem label="Turnovers" value={totalTurnovers} />
+              <StatGridItem label="Fouls" value={totalFouls} />
+              <StatGridItem
+                label="FG %"
+                value={`${calculatePercentage(totalMadeFG, totalAttemptFG)}%`}
+              />
+              <StatGridItem
+                label="3PT %"
+                value={`${calculatePercentage(
+                  totalMade3PTS,
+                  totalAttempt3PTS
+                )}%`}
+              />
+              <StatGridItem
+                label="FT %"
+                value={`${calculatePercentage(totalMadeFT, totalAttemptFT)}%`}
+              />
             </View>
           </View>
 
           {/*  Stats for Specific Game Section */}
-          {totalGamesPlayed > 0 && (
-            <View style={styles.statsCard}>
-              <Text style={styles.sectionTitle}>Stats for Specific Game</Text>
-              <Text style={styles.subTitle}>Currently Viewing:</Text>
-              <TouchableOpacity
-                style={styles.selectGameButton}
-                onPress={() => setIsGameSelectionModalVisible(true)}
-              >
-                <Text style={styles.selectGameButtonText}>
-                  {selectedGame
-                    ? // (vs ${selectedGame.opponent}, ${selectedGame.game_date}) could be added
-                      `Game ${selectedGame.game_id}`
-                    : "Select a Game"}
-                </Text>
-              </TouchableOpacity>
+          <View style={styles.card}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Game Performance</Text>
+              <View style={styles.gameBadge}>
+                <Text style={styles.gameBadgeText}>All Games</Text>
+              </View>
+            </View>
 
-              {selectedGame ? (
-                <View style={styles.specificGameStats}>
-                  <Text style={styles.gameDetailHeader}>
-                    Game ID: {selectedGame.game_id}
-                  </Text>
-                  {/* removed for now, could be added later
-                  <Text style={styles.gameDetailHeader}>
-                    Opponent: {selectedGame.opponent}
-                  </Text>
-                  <Text style={styles.gameDetailHeader}>
-                    Date: {selectedGame.game_date}
-                  </Text>
-                   */}
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Points:</Text>
-                    <Text style={styles.statValue}>{selectedGame.points}</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Total Rebounds:</Text>
-                    <Text style={styles.statValue}>
-                      {selectedGame.offRebound + selectedGame.defRebound}
+            <Text style={styles.subLabel}>
+              Tap a game to see detailed breakdown:
+            </Text>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={athleteGameRecords}
+              keyExtractor={(item) => item.game_id.toString()}
+              contentContainerStyle={styles.horizontalScrollPadding}
+              renderItem={({ item }) => {
+                const isSelected = selectedGame?.game_id === item.game_id;
+                return (
+                  <TouchableOpacity
+                    style={[
+                      styles.gameChip,
+                      isSelected && styles.gameChipSelected,
+                    ]}
+                    onPress={() => setSelectedGame(item)}
+                  >
+                    <Text
+                      style={[
+                        styles.gameChipText,
+                        isSelected && styles.gameChipTextSelected,
+                      ]}
+                    >
+                      G{item.game_id}
                     </Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Assists:</Text>
-                    <Text style={styles.statValue}>{selectedGame.assists}</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Steals:</Text>
-                    <Text style={styles.statValue}>{selectedGame.steals}</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Blocks:</Text>
-                    <Text style={styles.statValue}>{selectedGame.blocks}</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Turnovers:</Text>
-                    <Text style={styles.statValue}>
-                      {selectedGame.turnovers}
-                    </Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Fouls:</Text>
-                    <Text style={styles.statValue}>{selectedGame.fouls}</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>FG%:</Text>
-                    <Text style={styles.statValue}>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+
+            {selectedGame && (
+              <View style={styles.specificGameContent}>
+                <View style={styles.gameMetaRow}>
+                  <Text style={styles.metaLabel}>DETAILED BREAKDOWN</Text>
+                  <Text style={styles.metaValue}>
+                    ID: #{selectedGame.game_id}
+                  </Text>
+                </View>
+                <View style={styles.summaryGrid}>
+                  <StatGridItem
+                    label="PTS"
+                    value={selectedGame.points}
+                    highlight
+                  />
+                  <StatGridItem label="AST" value={selectedGame.assists} />
+                  <StatGridItem
+                    label="REB"
+                    value={selectedGame.offRebound + selectedGame.defRebound}
+                  />
+                  <StatGridItem label="STL" value={selectedGame.steals} />
+                  <StatGridItem label="BLK" value={selectedGame.blocks} />
+                  <StatGridItem
+                    label="TO"
+                    value={selectedGame.turnovers}
+                    isNegative
+                  />
+                  <StatGridItem
+                    label="PF"
+                    value={selectedGame.fouls}
+                    isNegative
+                  />
+                </View>
+                <View style={styles.shootingRow}>
+                  <View style={styles.shootingCol}>
+                    <Text style={styles.shootingLabel}>FG%</Text>
+                    <Text style={styles.shootingVal}>
                       {calculatePercentage(
                         selectedGame.madeFG,
                         selectedGame.attemptFG
@@ -467,9 +482,9 @@ export default function AthleteDetailScreen() {
                       %
                     </Text>
                   </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>3PT%:</Text>
-                    <Text style={styles.statValue}>
+                  <View style={styles.shootingCol}>
+                    <Text style={styles.shootingLabel}>3P%</Text>
+                    <Text style={styles.shootingVal}>
                       {calculatePercentage(
                         selectedGame.made3PTS,
                         selectedGame.attempt3PTS
@@ -477,9 +492,9 @@ export default function AthleteDetailScreen() {
                       %
                     </Text>
                   </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>FT%:</Text>
-                    <Text style={styles.statValue}>
+                  <View style={styles.shootingCol}>
+                    <Text style={styles.shootingLabel}>FT%</Text>
+                    <Text style={styles.shootingVal}>
                       {calculatePercentage(
                         selectedGame.madeFT,
                         selectedGame.attemptFT
@@ -488,47 +503,9 @@ export default function AthleteDetailScreen() {
                     </Text>
                   </View>
                 </View>
-              ) : (
-                <Text style={styles.noDataText}>
-                  No game selected or available data.
-                </Text>
-              )}
-            </View>
-          )}
-
-          {/* Game Selection Modal */}
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={isGameSelectionModalVisible}
-            onRequestClose={() => {
-              setIsGameSelectionModalVisible(!isGameSelectionModalVisible);
-            }}
-          >
-            <View style={styles.centeredView}>
-              <View style={styles.modalView}>
-                <Text style={styles.modalTitle}>Select a Game</Text>
-                {athleteGameRecords.length > 0 ? (
-                  <FlatList
-                    data={athleteGameRecords}
-                    keyExtractor={(item: GameRecord) => item.game_id.toString()}
-                    renderItem={renderGameItem}
-                    style={styles.modalList}
-                  />
-                ) : (
-                  <Text style={styles.noDataText}>No games available.</Text>
-                )}
-                <Pressable
-                  style={[styles.button, styles.buttonClose]}
-                  onPress={() =>
-                    setIsGameSelectionModalVisible(!isGameSelectionModalVisible)
-                  }
-                >
-                  <Text style={styles.textStyle}>Done</Text>
-                </Pressable>
               </View>
-            </View>
-          </Modal>
+            )}
+          </View>
 
           {/* Individual Stat Line Charts */}
           {actualGamesCharted > 1 && ( // Need at least 2 data points for a line chart
@@ -655,7 +632,7 @@ export default function AthleteDetailScreen() {
           {/* Excelling at... */}
           <View style={[styles.statsCard, styles.excellenceCard]}>
             <Text style={[styles.sectionTitle, { color: "#387B45" }]}>
-              ⭐ Current Strengths
+              Current Strengths
             </Text>
             <Text style={[styles.sectionText]}>
               This was generated from the last {actualGamesCharted} games.
@@ -687,7 +664,7 @@ export default function AthleteDetailScreen() {
           {/* Priority List / Needs Attention */}
           <View style={[styles.statsCard, styles.attentionCard]}>
             <Text style={[styles.sectionTitle, { color: "#EC1D25" }]}>
-              🚨 Needs Attention
+              Needs Attention
             </Text>
             <Text style={[styles.sectionText]}>
               This was generated from the last {actualGamesCharted} games.
@@ -742,26 +719,156 @@ export default function AthleteDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    backgroundColor: "#f9f9f9",
+  container: { flex: 1, backgroundColor: "#F8F9FA", padding: 16 },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  playerName: {
-    fontSize: 28,
-    fontWeight: "bold",
+  headerCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 16,
     marginBottom: 20,
-    color: "#333",
-    textAlign: "center",
+    elevation: 2,
   },
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#EC1D25",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerInfo: { marginLeft: 16 },
+  playerName: { fontSize: 22, fontWeight: "800", color: "#1A1C1E" },
+  playerSub: { fontSize: 14, color: "#6C757D" },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#555",
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#1A1C1E",
+    marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    paddingBottom: 5,
+    borderBottomColor: "#F1F3F5",
+    paddingBottom: 8,
+  },
+  summaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  gridItem: {
+    width: "48%",
+    backgroundColor: "#F8F9FA",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#F1F3F5",
+  },
+  gridLabel: {
+    fontSize: 11,
+    color: "#8E8E93",
+    fontWeight: "bold",
+    textTransform: "uppercase",
+  },
+  gridValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#1C1C1E",
+    marginTop: 2,
+  },
+  gameChip: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#E5E5EA",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  gameChipSelected: { backgroundColor: "#EC1D25", borderColor: "#EC1D25" },
+  gameChipText: { color: "#3A3A3C", fontWeight: "700" },
+  gameChipTextSelected: { color: "#fff" },
+  specificGameContent: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F3F5",
+  },
+  gameMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  metaLabel: { fontSize: 10, fontWeight: "900", color: "#8E8E93" },
+  metaValue: { fontSize: 12, color: "#AEAEB2" },
+  shootingRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 12,
+    backgroundColor: "#F8F9FA",
+    padding: 12,
+    borderRadius: 12,
+  },
+  shootingCol: { alignItems: "center" },
+  shootingLabel: { fontSize: 10, color: "#8E8E93", fontWeight: "bold" },
+  shootingVal: { fontSize: 15, fontWeight: "700", color: "#1C1C1E" },
+  analysisRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F3F5",
+  },
+  analysisText: { fontSize: 15, color: "#3A3A3C" },
+  excellenceScore: { color: "#387B45", fontWeight: "bold" },
+  attentionScore: { color: "#EC1D25", fontWeight: "bold" },
+  disclaimerText: { fontSize: 13, color: "#8E8E93", marginBottom: 10 },
+  footerNote: {
+    fontSize: 11,
+    color: "#AEAEB2",
+    marginTop: 10,
+    fontStyle: "italic",
+  },
+  excellenceCard: {
+    borderColor: "#387B45",
+    borderWidth: 1,
+    backgroundColor: "#F7FCF8",
+  },
+  attentionCard: {
+    borderColor: "#EC1D25",
+    borderWidth: 1,
+    backgroundColor: "#FFF9F9",
+  },
+  priorityStat: { color: "#EC1D25", fontWeight: "bold" },
+  debugBox: { padding: 16, backgroundColor: "#2C2C2E", borderRadius: 12 },
+  debugTitle: {
+    color: "#E5E5EA",
+    fontSize: 12,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  debugText: { color: "#636366", fontSize: 12 },
+  horizontalScrollPadding: { paddingBottom: 10 },
+  subLabel: { fontSize: 13, color: "#8E8E93", marginBottom: 10 },
+
+  playerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  playerImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#ccc",
   },
   sectionText: {
     fontSize: 16,
@@ -854,7 +961,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 22,
-    backgroundColor: "rgba(0,0,0,0.5)", // Darken backgoround
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalView: {
     margin: 20,
@@ -907,20 +1014,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
-  attentionCard: {
-    borderColor: "#EC1D25",
-    borderWidth: 2,
-    padding: 15,
-    marginTop: 15,
-    marginBottom: 30,
-  },
-  excellenceCard: {
-    borderColor: "#387B45",
-    borderWidth: 2,
-    padding: 15,
-    marginTop: 15,
-    marginBottom: 30,
-  },
   excellenceCardText: {
     fontSize: 16,
     fontWeight: "600",
@@ -939,8 +1032,75 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
   },
-  priorityStat: {
-    color: "#EC1D25",
-    fontWeight: "700",
+
+  sectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  gameBadge: {
+    backgroundColor: "#f0f0f0",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  gameBadgeText: {
+    fontSize: 12,
+    color: "#666",
+    fontWeight: "600",
+  },
+  specificGameStatsGrid: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  gameMetaHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  gameDateText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#888",
+    textTransform: "uppercase",
+  },
+  gameIdText: {
+    fontSize: 14,
+    color: "#888",
+  },
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  statBox: {
+    width: "30%",
+    backgroundColor: "#f8f9fa",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  statBoxLabel: {
+    fontSize: 12,
+    color: "#888",
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  statBoxValue: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  shootingStat: {
+    alignItems: "center",
+  },
+  shootingValue: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#444",
   },
 });

@@ -1,4 +1,7 @@
 // app/performance_practice/practice/index.tsx
+import Entypo from "@expo/vector-icons/Entypo";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useState } from "react";
 import {
   Alert,
@@ -353,6 +356,7 @@ const PracticeScreen: React.FC = () => {
                         onPress={() => handleCategorySelect(practice.id)}
                         style={{ marginBottom: 10, alignItems: "center" }}
                       >
+                        {/** REMINDER add the practice image */}
                         <PracticeCategoryModal
                           name={practice.name}
                           description={practice.description}
@@ -375,13 +379,14 @@ const PracticeScreen: React.FC = () => {
             </Animated.View>
           </ScrollView>
         ) : (
-          <View style={styles.drills_screen_container}>
+          <ScrollView style={styles.drills_screen_container}>
             <Pressable
               onPress={handleBackToCategories}
               style={styles.backButton}
             >
               <Text style={styles.backButtonText}>
-                {"< Back to Practice Categories"}
+                {<Ionicons name="arrow-back" size={20} color="red" />}{" "}
+                {"Back to Practice Categories"}
               </Text>
             </Pressable>
 
@@ -398,12 +403,6 @@ const PracticeScreen: React.FC = () => {
               value={drillSearchQuery}
               onChangeText={(text) => setDrillSearchQuery(text)}
             />
-
-            <View style={styles.drillsHeader}>
-              <Text style={styles.drillsCountText}>
-                Drills: {filteredDrills.length}
-              </Text>
-            </View>
             <View style={styles.floatingButtonsContainer}>
               <Pressable onPress={handleAddDrill} style={styles.addButton}>
                 <Text style={styles.addButtonText}>+</Text>
@@ -445,7 +444,7 @@ const PracticeScreen: React.FC = () => {
                 No drills found for this category or search.
               </Text>
             )}
-          </View>
+          </ScrollView>
         )}
       </View>
 
@@ -455,12 +454,15 @@ const PracticeScreen: React.FC = () => {
           style={styles.addButton}
           onPress={handleShowGenerateRegimenModal}
         >
-          {/** REMINDER change this to generate button image */}
-          <Text style={styles.addButtonText}>@</Text>
+          <Text style={styles.addButtonText}>
+            <FontAwesome6 name="wand-magic-sparkles" size={24} color="white" />
+          </Text>
         </Pressable>
 
         <Pressable onPress={handleAddPractice} style={styles.addButton}>
-          <Text style={styles.addButtonText}>+</Text>
+          <Text style={styles.addButtonText}>
+            <Entypo name="plus" size={24} color="white" />
+          </Text>
         </Pressable>
       </View>
       <Modal

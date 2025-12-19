@@ -128,53 +128,11 @@ export default function TeamPerformanceScreen() {
     setOverallTeamStats(overallStats);
   }, []);
 
-  const getTeamStatLineChartData = (
-    statKey: keyof TeamGameStats,
-    title: string
-  ) => {
-    // Get the most recent games, then reverse them for chronological display on the chart
+  const getTeamStatLineChartData = (statKey: keyof TeamGameStats) => {
     const recordsToChart = teamGameStats.slice(0, CHART_GAMES_LIMIT).reverse();
-
-    const labels = recordsToChart.map((record) => `Game ${record.game_id}`);
-    const data = recordsToChart.map((record) => record[statKey] as number);
-
     return {
-      labels: labels,
-      datasets: [
-        {
-          data: data,
-          color: (opacity = 1) => `rgba(236, 29, 37, ${opacity})`,
-          strokeWidth: 2,
-        },
-      ],
-      title: title,
-    };
-  };
-
-  const getTeamShootingPercentagesData = () => {
-    if (overallTeamStats.totalGames === 0) {
-      return {
-        labels: ["FG%", "3PT%", "FT%"],
-        data: [0, 0, 0],
-      };
-    }
-
-    const fgPercent =
-      overallTeamStats.totalAttemptFG > 0
-        ? overallTeamStats.totalMadeFG / overallTeamStats.totalAttemptFG
-        : 0;
-    const threePtPercent =
-      overallTeamStats.totalAttempt3PTS > 0
-        ? overallTeamStats.totalMade3PTS / overallTeamStats.totalAttempt3PTS
-        : 0;
-    const ftPercent =
-      overallTeamStats.totalAttemptFT > 0
-        ? overallTeamStats.totalMadeFT / overallTeamStats.totalAttemptFT
-        : 0;
-
-    return {
-      labels: ["FG%", "3PT%", "FT%"],
-      data: [fgPercent, threePtPercent, ftPercent],
+      labels: recordsToChart.map((r) => `G${r.game_id}`),
+      datasets: [{ data: recordsToChart.map((r) => r[statKey] as number) }],
     };
   };
 
@@ -183,7 +141,7 @@ export default function TeamPerformanceScreen() {
     backgroundGradientFrom: "#fefefe",
     backgroundGradientTo: "#ffffff",
     decimalPlaces: 0, // Default to 0 decimal places for counting stats
-    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    color: (opacity = 1) => `rgba(236, 29, 37, ${opacity})`,
     labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     style: {
       borderRadius: 16,
@@ -203,308 +161,272 @@ export default function TeamPerformanceScreen() {
     return attempt > 0 ? ((made / attempt) * 100).toFixed(2) : "0.00";
   };
 
+  const StatGridItem = ({ label, value, highlight = false }: any) => (
+    <View style={styles.gridItem}>
+      <Text style={styles.gridLabel}>{label}</Text>
+      <Text style={[styles.gridValue, highlight && { color: "#EC1D25" }]}>
+        {value}
+      </Text>
+    </View>
+  );
+
   const actualGamesCharted = Math.min(teamGameStats.length, CHART_GAMES_LIMIT);
 
   return (
-    <ScrollView style={styles.container}>
-      <Stack.Screen options={{ headerTitle: "Team Performance" }} />
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <Stack.Screen options={{ headerTitle: "Team Analytics" }} />
 
-      <Text style={styles.header}>Overall Team Performance</Text>
+      <Text style={styles.mainHeader}>Team Performance Dashboard</Text>
 
       {overallTeamStats.totalGames === 0 ? (
-        <Text style={styles.noDataText}>
-          No game records available for the team.
-        </Text>
+        <Text style={styles.noDataText}>No team records available yet.</Text>
       ) : (
         <>
-          <View style={styles.statsCard}>
+          {/* 1. Aggregated Career Stats Card */}
+          <View style={styles.card}>
             <Text style={styles.sectionTitle}>
-              Aggregated Team Stats ({overallTeamStats.totalGames} Games)
+              Season Totals ({overallTeamStats.totalGames} Games)
             </Text>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Points:</Text>
-              <Text style={styles.statValue}>
-                {overallTeamStats.totalPoints}
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Rebounds:</Text>
-              <Text style={styles.statValue}>
-                {overallTeamStats.totalRebounds}
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Assists:</Text>
-              <Text style={styles.statValue}>
-                {overallTeamStats.totalAssists}
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Steals:</Text>
-              <Text style={styles.statValue}>
-                {overallTeamStats.totalSteals}
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Blocks:</Text>
-              <Text style={styles.statValue}>
-                {overallTeamStats.totalBlocks}
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Turnovers:</Text>
-              <Text style={styles.statValue}>
-                {overallTeamStats.totalTurnovers}
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Fouls:</Text>
-              <Text style={styles.statValue}>
-                {overallTeamStats.totalFouls}
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>FG%:</Text>
-              <Text style={styles.statValue}>
-                {calculatePercentage(
+            <View style={styles.summaryGrid}>
+              <StatGridItem
+                label="Total Pts"
+                value={overallTeamStats.totalPoints}
+                highlight
+              />
+              <StatGridItem
+                label="Total Reb"
+                value={overallTeamStats.totalRebounds}
+              />
+              <StatGridItem
+                label="Total Ast"
+                value={overallTeamStats.totalAssists}
+              />
+              <StatGridItem
+                label="Total Stl"
+                value={overallTeamStats.totalSteals}
+              />
+              <StatGridItem
+                label="Total Blk"
+                value={overallTeamStats.totalBlocks}
+              />
+              <StatGridItem
+                label="Turnovers"
+                value={overallTeamStats.totalTurnovers}
+              />
+              <StatGridItem
+                label="Total Fouls"
+                value={overallTeamStats.totalFouls}
+              />
+              <StatGridItem
+                label="FG Accuracy"
+                value={`${calculatePercentage(
                   overallTeamStats.totalMadeFG,
                   overallTeamStats.totalAttemptFG
-                )}
-                %
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>3PT%:</Text>
-              <Text style={styles.statValue}>
-                {calculatePercentage(
+                )}%`}
+              />
+              <StatGridItem
+                label="3PT Accuracy"
+                value={`${calculatePercentage(
                   overallTeamStats.totalMade3PTS,
                   overallTeamStats.totalAttempt3PTS
-                )}
-                %
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>FT%:</Text>
-              <Text style={styles.statValue}>
-                {calculatePercentage(
+                )}%`}
+              />
+              <StatGridItem
+                label="FT Accuracy"
+                value={`${calculatePercentage(
                   overallTeamStats.totalMadeFT,
                   overallTeamStats.totalAttemptFT
-                )}
-                %
-              </Text>
+                )}%`}
+              />
             </View>
           </View>
 
-          {/* Team Stat Line Charts */}
+          {/* 2. Efficiency Chart */}
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Overall Shooting Efficiency</Text>
+            <ProgressChart
+              data={{
+                labels: ["FG", "3PT", "FT"],
+                data: [
+                  overallTeamStats.totalAttemptFG > 0
+                    ? overallTeamStats.totalMadeFG /
+                      overallTeamStats.totalAttemptFG
+                    : 0,
+                  overallTeamStats.totalAttempt3PTS > 0
+                    ? overallTeamStats.totalMade3PTS /
+                      overallTeamStats.totalAttempt3PTS
+                    : 0,
+                  overallTeamStats.totalAttemptFT > 0
+                    ? overallTeamStats.totalMadeFT /
+                      overallTeamStats.totalAttemptFT
+                    : 0,
+                ],
+              }}
+              width={screenWidth - 60}
+              height={180}
+              chartConfig={{
+                ...chartConfig,
+                color: (opacity = 1) => `rgba(236, 29, 37, ${opacity})`,
+              }}
+              hideLegend={false}
+              style={styles.chartStyle}
+            />
+          </View>
+
+          {/* 3. RESTORED: All Detail Charts Section */}
           {actualGamesCharted > 1 && (
-            <>
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Team Points Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getTeamStatLineChartData("totalPoints", "Team Points")}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Team Rebounds Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getTeamStatLineChartData(
-                    "totalRebounds",
-                    "Team Rebounds"
-                  )}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Team Assists Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getTeamStatLineChartData(
-                    "totalAssists",
-                    "Team Assists"
-                  )}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Team Steals Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getTeamStatLineChartData("totalSteals", "Team Steals")}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Team Blocks Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getTeamStatLineChartData("totalBlocks", "Team Blocks")}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Team Turnovers Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getTeamStatLineChartData(
-                    "totalTurnovers",
-                    "Team Turnovers"
-                  )}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Team Fouls Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getTeamStatLineChartData("totalFouls", "Team Fouls")}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-            </>
-          )}
-
-          {/* Overall Team Shooting Percentages Progress Chart */}
-          {overallTeamStats.totalGames > 0 && (
-            <View style={styles.chartContainer}>
-              <Text style={styles.chartTitle}>
-                Overall Team Shooting Efficiency
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>
+                Performance Trends (Last {actualGamesCharted})
               </Text>
-              <ProgressChart
-                data={getTeamShootingPercentagesData()}
-                width={screenWidth - 30}
-                height={220}
-                chartConfig={{
-                  ...chartConfig,
-                  decimalPlaces: 2, // Ensure 2 decimal places for percentages
-                  color: (opacity = 1) => `rgba(236, 29, 37, ${opacity})`,
-                }}
-                hideLegend={false}
+
+              <Text style={styles.chartLabelHeader}>Points Per Game</Text>
+              <LineChart
+                data={getTeamStatLineChartData("totalPoints")}
+                width={screenWidth - 60}
+                height={200}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chartStyle}
+              />
+
+              <Text style={styles.chartLabelHeader}>Rebounds Per Game</Text>
+              <LineChart
+                data={getTeamStatLineChartData("totalRebounds")}
+                width={screenWidth - 60}
+                height={200}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chartStyle}
+              />
+
+              <Text style={styles.chartLabelHeader}>Assists Per Game</Text>
+              <LineChart
+                data={getTeamStatLineChartData("totalAssists")}
+                width={screenWidth - 60}
+                height={200}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chartStyle}
+              />
+
+              <Text style={styles.chartLabelHeader}>Steals Per Game</Text>
+              <LineChart
+                data={getTeamStatLineChartData("totalSteals")}
+                width={screenWidth - 60}
+                height={200}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chartStyle}
+              />
+
+              <Text style={styles.chartLabelHeader}>Blocks Per Game</Text>
+              <LineChart
+                data={getTeamStatLineChartData("totalBlocks")}
+                width={screenWidth - 60}
+                height={200}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chartStyle}
+              />
+
+              <Text style={styles.chartLabelHeader}>Turnovers Per Game</Text>
+              <LineChart
+                data={getTeamStatLineChartData("totalTurnovers")}
+                width={screenWidth - 60}
+                height={200}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chartStyle}
+              />
+
+              <Text style={styles.chartLabelHeader}>Fouls Per Game</Text>
+              <LineChart
+                data={getTeamStatLineChartData("totalFouls")}
+                width={screenWidth - 60}
+                height={200}
+                chartConfig={chartConfig}
+                bezier
                 style={styles.chartStyle}
               />
             </View>
           )}
         </>
       )}
+      <View style={{ height: 40 }} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    backgroundColor: "#f9f9f9",
-  },
-  header: {
-    fontSize: 28,
-    fontWeight: "bold",
+  container: { flex: 1, backgroundColor: "#F8F9FA", padding: 16 },
+  mainHeader: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#1A1C1E",
     marginBottom: 20,
-    color: "#333",
     textAlign: "center",
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#555",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    paddingBottom: 5,
-  },
-  statsCard: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
-  statItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  statLabel: {
     fontSize: 16,
-    color: "#666",
-    flex: 2,
+    fontWeight: "700",
+    color: "#495057",
+    marginBottom: 16,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F3F5",
+    paddingBottom: 8,
   },
-  statValue: {
-    fontSize: 16,
-    fontWeight: "bold",
+  chartLabelHeader: {
+    fontSize: 14,
+    fontWeight: "600",
     color: "#333",
-    flex: 1,
-    textAlign: "right",
+    marginTop: 20,
+    marginBottom: 8,
+    textAlign: "center",
   },
+  summaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  gridItem: {
+    width: "48%",
+    backgroundColor: "#F8F9FA",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#F1F3F5",
+  },
+  gridLabel: {
+    fontSize: 10,
+    color: "#8E8E93",
+    fontWeight: "bold",
+    textTransform: "uppercase",
+  },
+  gridValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#1C1C1E",
+    marginTop: 2,
+  },
+  chartStyle: { marginVertical: 8, borderRadius: 16, alignSelf: "center" },
   noDataText: {
     fontSize: 16,
-    color: "#888",
+    color: "#8E8E93",
     textAlign: "center",
     marginTop: 50,
-  },
-  chartContainer: {
-    marginBottom: 20,
-    alignItems: "center",
-  },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#333",
-    textAlign: "center",
-  },
-  chartStyle: {
-    marginVertical: 8,
-    borderRadius: 16,
   },
 });

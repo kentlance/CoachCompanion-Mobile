@@ -136,7 +136,7 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
             style={modalFormStyles.scrollView}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={modalFormStyles.label}>Training Regimen Name</Text>
+            <Text style={modalFormStyles.label}>Practice Regimen Name</Text>
             <TextInput
               style={modalFormStyles.input}
               value={name}

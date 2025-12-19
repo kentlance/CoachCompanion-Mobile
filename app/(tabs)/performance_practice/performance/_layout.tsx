@@ -1,5 +1,6 @@
 // app/performance_practice/performance/_layout.tsx
 import { Stack } from "expo-router";
+import React from "react";
 
 export default function PerformanceLayout() {
   return (
@@ -17,7 +18,8 @@ export default function PerformanceLayout() {
       <Stack.Screen
         name="[athleteId]"
         options={{
-          headerTitle: "Athlete Details",
+          headerTitle: "Athlete Performance",
+          headerShown: true,
         }}
       />
       <Stack.Screen

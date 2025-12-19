@@ -10,6 +10,7 @@ interface PracticeCategoryModalProps {
   onDelete: (id: number, name: string) => void; // Callback for delete
 }
 
+// REMINDER add the image of practice category
 export default function PracticeCategoryModal({
   name,
   description,

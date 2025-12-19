@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   search_input: {
-    height: 40,
+    height: 45,
     borderColor: "gray",
     borderWidth: 1,
     borderRadius: 8,
