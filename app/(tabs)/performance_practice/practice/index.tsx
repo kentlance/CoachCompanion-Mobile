@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Animated, { LinearTransition } from "react-native-reanimated";
 import DrillFormModal from "./drill_form_modal";
 import DrillModal from "./drill_modal";
 import drills_list_initial from "./drills_list";
@@ -20,7 +21,6 @@ import practices_list_initial from "./practices";
 import TrainingRegimen from "./regimen/training_regimens";
 
 // debug for generating trainingSamples for algo
-import { generateSyntheticSamples } from "./samples";
 // end debug for generating trainingSamples for algo
 
 // add "image" for Practice
@@ -97,6 +97,19 @@ const PracticeScreen: React.FC = () => {
         step.toLowerCase().includes(drillSearchQuery.toLowerCase())
       )
   );
+
+  const [expandedSections, setExpandedSections] = useState({
+    created: false,
+    regimens: false,
+    practices: true,
+  });
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
   const handleCategorySelect = (id: number) => {
     setSelectedCategoryId(id);
@@ -255,8 +268,11 @@ const PracticeScreen: React.FC = () => {
       <View style={{ flex: 1 }}>
         {selectedCategoryId === null ? (
           <ScrollView style={styles.practices_container}>
-            {/** if user is athlete, show assigned regimens, if user is coach, show created regimens */}
-            {/** debug for creating synthetic samples */}
+            {/** if user is athlete, show assigned regimens, if user is coach, show created regimens
+             * not implemented for now
+             */}
+            {/** debug for creating synthetic samples 
+             * 
             <Pressable
               style={styles.addButton}
               onPress={() => {
@@ -270,53 +286,93 @@ const PracticeScreen: React.FC = () => {
             >
               <Text style={styles.addButtonText}>#</Text>
             </Pressable>
-            {/** end debug for creating synthetic samples */}
+            */}
 
-            <View>
-              <View style={styles.category_header}>
-                <Text style={styles.category_text}>Created Regimens</Text>
-              </View>
-              <TrainingRegimen />
-            </View>
+            <Animated.View layout={LinearTransition}>
+              <Pressable
+                style={styles.category_header}
+                onPress={() => toggleSection("created")}
+              >
+                <Text style={styles.category_text}>
+                  {expandedSections.created ? "▼ " : "▶ "} Created Regimens
+                </Text>
+              </Pressable>
 
-            <View style={styles.category_header}>
-              <Text style={styles.category_text}>Practice Regimens</Text>
-            </View>
-            <View style={styles.category_header}>
-              <Text style={styles.category_text}>Practices</Text>
-            </View>
+              {expandedSections.created && (
+                <View>
+                  <TrainingRegimen />
+                </View>
+              )}
+            </Animated.View>
 
-            <TextInput
-              style={styles.search_input}
-              placeholder="Search practices"
-              value={searchQuery}
-              onChangeText={(text) => setSearchQuery(text)}
-            />
-            <View style={styles.headerControls}>
-              <Text style={styles.practicesCountText}>
-                Practices: {filteredPractices.length}
-              </Text>
-            </View>
+            <Animated.View layout={LinearTransition}>
+              <Pressable
+                style={styles.category_header}
+                onPress={() => toggleSection("regimens")}
+              >
+                <Text style={styles.category_text}>
+                  {expandedSections.regimens ? "▼ " : "▶ "} Practice Regimens
+                </Text>
+              </Pressable>
 
-            {filteredPractices.length > 0 ? (
-              filteredPractices.map((practice) => (
-                <Pressable
-                  key={practice.id}
-                  onPress={() => handleCategorySelect(practice.id)}
-                  style={{ marginBottom: 10, alignItems: "center" }}
-                >
-                  <PracticeCategoryModal
-                    name={practice.name}
-                    description={practice.description}
-                    practiceId={practice.id}
-                    onEdit={handleEditPractice}
-                    onDelete={handleDeletePractice}
+              {expandedSections.regimens && (
+                <View>
+                  <View>{/* Practice Regimens go here */}</View>
+                </View>
+              )}
+            </Animated.View>
+
+            <Animated.View layout={LinearTransition}>
+              <Pressable
+                style={styles.category_header}
+                onPress={() => toggleSection("practices")}
+              >
+                <Text style={styles.category_text}>
+                  {expandedSections.practices ? "▼ " : "▶ "} Practices
+                </Text>
+              </Pressable>
+
+              {expandedSections.practices && (
+                <View>
+                  <TextInput
+                    style={styles.search_input}
+                    placeholder="Search practices"
+                    value={searchQuery}
+                    onChangeText={(text) => setSearchQuery(text)}
                   />
-                </Pressable>
-              ))
-            ) : (
-              <Text style={styles.noPracticesText}>No practices found.</Text>
-            )}
+                  <View style={styles.headerControls}>
+                    <Text style={styles.practicesCountText}>
+                      Practices: {filteredPractices.length}
+                    </Text>
+                  </View>
+
+                  {filteredPractices.length > 0 ? (
+                    filteredPractices.map((practice) => (
+                      <Pressable
+                        key={practice.id}
+                        onPress={() => handleCategorySelect(practice.id)}
+                        style={{ marginBottom: 10, alignItems: "center" }}
+                      >
+                        <PracticeCategoryModal
+                          name={practice.name}
+                          description={practice.description}
+                          practiceId={practice.id}
+                          onEdit={handleEditPractice}
+                          onDelete={handleDeletePractice}
+                        />
+                      </Pressable>
+                    ))
+                  ) : (
+                    <Animated.Text
+                      layout={LinearTransition}
+                      style={styles.noPracticesText}
+                    >
+                      No practices found.
+                    </Animated.Text>
+                  )}
+                </View>
+              )}
+            </Animated.View>
           </ScrollView>
         ) : (
           <View style={styles.drills_screen_container}>
