@@ -61,16 +61,15 @@ export default function PerformanceScreen() {
         <FlatList
           data={filteredAthletes}
           keyExtractor={(item: Athlete) => item.athlete_no.toString()}
-          numColumns={2} // Display athletes in a 2-column grid
-          columnWrapperStyle={styles.row} // Style for each row in the grid
+          numColumns={2}
+          columnWrapperStyle={styles.row}
           renderItem={({ item: athlete }: { item: Athlete }) => (
-            <Pressable
-              key={athlete.athlete_no}
-              onPress={() => handleAthletePress(athlete.athlete_no)}
-              style={styles.athleteCardPressable}
-            >
-              <AthleteModal athlete={athlete} />
-            </Pressable>
+            <View key={athlete.athlete_no} style={styles.athleteCardPressable}>
+              <AthleteModal
+                athlete={athlete}
+                onPress={() => handleAthletePress(athlete.athlete_no)}
+              />
+            </View>
           )}
           contentContainerStyle={styles.flatListContent}
         />

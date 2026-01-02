@@ -1,6 +1,6 @@
 // app/performance_practice/performance/[athleteId].tsx
 import Feather from "@expo/vector-icons/Feather";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -13,12 +13,6 @@ import {
 } from "react-native";
 import { LineChart, ProgressChart } from "react-native-chart-kit";
 // debugging algorithm
-import drills_list from "../practice/drills_list";
-import {
-  buildForest,
-  predictForestWeighted,
-} from "../practice/randomForestAlgo";
-import trainingSamples from "../practice/trainingSample";
 // end of debug imports
 
 // debug assignedregimen
@@ -34,7 +28,6 @@ const CHART_GAMES_LIMIT = 5; // Game limit on charts
 
 export default function AthleteDetailScreen() {
   const { athleteId } = useLocalSearchParams();
-  const router = useRouter(); // Initialize the router for the back button
   const [athlete, setAthlete] = useState<Athlete | null>(null);
   const [athleteGameRecords, setAthleteGameRecords] = useState<GameRecord[]>(
     []
@@ -79,7 +72,6 @@ export default function AthleteDetailScreen() {
     points: "Scoring (Points)",
   };
 
-  const forest = buildForest(trainingSamples, statKeys);
   // Reverse STAT_LABELS to map display labels back to internal stat keys
   const reverseLabels = Object.fromEntries(
     Object.entries(STAT_LABELS).map(([key, label]) => [label, key])
@@ -92,12 +84,6 @@ export default function AthleteDetailScreen() {
       attentionScores[statKey] = Math.abs(item.score);
     }
   });
-
-  const predictedDrillIds = predictForestWeighted(
-    forest,
-    attentionScores,
-    drills_list
-  );
 
   useEffect(() => {
     if (athleteId) {
@@ -140,6 +126,9 @@ export default function AthleteDetailScreen() {
     const labels = recordsToChart.map((_, index) => `Game ${index + 1}`);
     const data = recordsToChart.map((record) => record[statKey] as number);
 
+    // Calculate the max for this specific dataset
+    const maxVal = getMaxWithBuffer(data);
+
     return {
       labels: labels,
       datasets: [
@@ -149,7 +138,8 @@ export default function AthleteDetailScreen() {
           strokeWidth: 2,
         },
       ],
-      title: title, // Pass title for chart rendering
+      title: title,
+      chartMax: maxVal,
     };
   };
 
@@ -182,6 +172,7 @@ export default function AthleteDetailScreen() {
     const data = recordsToChart.map(
       (record) => record.offRebound + record.defRebound
     );
+    const maxVal = getMaxWithBuffer(data);
 
     return {
       labels: labels,
@@ -193,6 +184,7 @@ export default function AthleteDetailScreen() {
         },
       ],
       title: "Total Rebounds",
+      chartMax: maxVal,
     };
   };
 
@@ -328,22 +320,13 @@ export default function AthleteDetailScreen() {
     CHART_GAMES_LIMIT
   );
 
-  // Render function for each game item in the FlatList
-  const renderGameItem = ({ item }: { item: GameRecord }) => (
-    <TouchableOpacity
-      style={styles.gameItem}
-      onPress={() => {
-        setSelectedGame(item);
-        setIsGameSelectionModalVisible(false); // Close modal on selection
-      }}
-    >
-      <Text style={styles.gameItemText}>
-        {/* (vs {item.opponent}, {item.game_date}) could be added, check Piad's module */}
-        Game {item.game_id}
-      </Text>
-    </TouchableOpacity>
-  );
+  // adds headroom (more y-axis) to linechart
+  const getMaxWithBuffer = (dataArray: number[]) => {
+    const max = Math.max(...dataArray, 1);
+    return Math.ceil(max * 1.2);
+  };
 
+  // Render function for each game item in the FlatList
   return (
     <ScrollView style={styles.container}>
       <Stack.Screen />
@@ -508,105 +491,47 @@ export default function AthleteDetailScreen() {
           </View>
 
           {/* Individual Stat Line Charts */}
-          {actualGamesCharted > 1 && ( // Need at least 2 data points for a line chart
+          {actualGamesCharted > 1 && (
             <>
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Points Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getStatLineChartData("points", "Points")}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
+              {[
+                { key: "points", label: "Points", customFunc: null },
+                {
+                  key: "rebounds",
+                  label: "Total Rebounds",
+                  customFunc: getTotalReboundsPerGameData,
+                },
+                { key: "assists", label: "Assists", customFunc: null },
+                { key: "steals", label: "Steals", customFunc: null },
+                { key: "blocks", label: "Blocks", customFunc: null },
+                { key: "turnovers", label: "Turnovers", customFunc: null },
+                { key: "fouls", label: "Fouls", customFunc: null },
+              ].map((stat) => {
+                const chartData = stat.customFunc
+                  ? stat.customFunc()
+                  : getStatLineChartData(
+                      stat.key as keyof GameRecord,
+                      stat.label
+                    );
 
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Total Rebounds Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getTotalReboundsPerGameData()}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Assists Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getStatLineChartData("assists", "Assists")}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Steals Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getStatLineChartData("steals", "Steals")}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Blocks Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getStatLineChartData("blocks", "Blocks")}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Turnovers Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getStatLineChartData("turnovers", "Turnovers")}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
-
-              <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>
-                  Fouls Per Game (Last {actualGamesCharted})
-                </Text>
-                <LineChart
-                  data={getStatLineChartData("fouls", "Fouls")}
-                  width={screenWidth - 30}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={styles.chartStyle}
-                />
-              </View>
+                return (
+                  <View key={stat.key} style={styles.chartContainer}>
+                    <Text style={styles.chartTitle}>
+                      {stat.label} Per Game (Last {actualGamesCharted})
+                    </Text>
+                    <LineChart
+                      data={chartData}
+                      width={screenWidth - 30}
+                      height={220}
+                      chartConfig={chartConfig}
+                      bezier
+                      fromZero={true}
+                      fromNumber={chartData.chartMax}
+                      segments={5}
+                      style={styles.chartStyle}
+                    />
+                  </View>
+                );
+              })}
             </>
           )}
 
@@ -690,24 +615,6 @@ export default function AthleteDetailScreen() {
               last {actualGamesCharted} games
             </Text>
           </View>
-
-          {/* Drill Recommendations - debugging purposes */}
-
-          {attentionPriorities.length > 0 ? (
-            <>
-              <View style={{ marginTop: 10, paddingBottom: 50 }}>
-                <Text style={{ fontWeight: "bold", color: "#555" }}>
-                  Predicted Drill IDs (debug):
-                </Text>
-                <Text>{predictedDrillIds.join(", ")}</Text>
-              </View>
-            </>
-          ) : (
-            <Text style={styles.noDataText}>
-              No significant areas needing attention found (performing at or
-              above the average). 🎉
-            </Text>
-          )}
         </>
       )}
       {/* 

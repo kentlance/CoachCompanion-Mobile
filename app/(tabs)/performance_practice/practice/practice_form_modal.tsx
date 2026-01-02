@@ -1,20 +1,23 @@
 // app/performance_practice/practice/practice_form_modal.tsx
 import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  Modal,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Modal, Pressable, Text, TextInput, View } from "react-native";
 import modalFormStyles from "./modalFormStyles";
 
 interface PracticeFormModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (id: number | null, name: string, description: string, skill: string) => void;
-  initialPractice?: { id: number; name: string; description: string; skill: string[] } | null;
+  onSave: (
+    id: number | null,
+    name: string,
+    description: string,
+    skill: string
+  ) => void;
+  initialPractice?: {
+    id: number;
+    name: string;
+    description: string;
+    skill: string[];
+  } | null;
   existingPractices?: { id: number; skill: string[] }[];
 }
 
@@ -53,7 +56,7 @@ const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
       Alert.alert("Error", "Practice name cannot be empty.");
       return;
     }
-    
+
     if (skill.trim() === "") {
       Alert.alert("Error", "Please specify a skill for this practice.");
       return;
@@ -61,9 +64,11 @@ const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
 
     // Check if skill is already used by another practice
     const isSkillUsed = existingPractices.some(
-      practice => 
-        practice.id !== currentId && 
-        practice.skill.some(s => s.toLowerCase() === skill.trim().toLowerCase())
+      (practice) =>
+        practice.id !== currentId &&
+        practice.skill.some(
+          (s) => s.toLowerCase() === skill.trim().toLowerCase()
+        )
     );
 
     if (isSkillUsed) {
@@ -71,7 +76,12 @@ const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
       return;
     }
 
-    onSave(currentId, name.trim(), description.trim(), skill.trim().toLowerCase());
+    onSave(
+      currentId,
+      name.trim(),
+      description.trim(),
+      skill.trim().toLowerCase()
+    );
     handleClose();
   };
 
@@ -108,11 +118,11 @@ const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
             onChangeText={setName}
             maxLength={50}
           />
-          
+
           <Text style={modalFormStyles.label}>Skill</Text>
           <TextInput
             style={modalFormStyles.input}
-            placeholder="e.g., shooting, dribbling, passing"
+            placeholder="e.g., shooting, passing"
             value={skill}
             onChangeText={(text) => {
               setSkill(text);
@@ -142,7 +152,9 @@ const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
               style={[modalFormStyles.button, modalFormStyles.buttonCancel]}
               onPress={handleClose}
             >
-              <Text style={[modalFormStyles.buttonText, { color: '#000' }]}>Cancel</Text>
+              <Text style={[modalFormStyles.buttonText, { color: "#000" }]}>
+                Cancel
+              </Text>
             </Pressable>
             <Pressable
               style={[modalFormStyles.button, modalFormStyles.buttonSave]}
@@ -159,7 +171,7 @@ const PracticeFormModal: React.FC<PracticeFormModalProps> = ({
 
 const styles = {
   warningText: {
-    color: '#ff3b30',
+    color: "#ff3b30",
     fontSize: 12,
     marginTop: -10,
     marginBottom: 10,

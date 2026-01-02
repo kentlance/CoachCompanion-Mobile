@@ -1,6 +1,4 @@
-// show regimen (for coach view, list all regimens)
-// when a regimen is clicked show the assigned_regimen then coach can edit (modify drills), delete
-
+import Feather from "@expo/vector-icons/Feather";
 import React from "react";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -16,12 +14,10 @@ interface RegimenItem {
 
 interface RegimenCardProps {
   item: RegimenItem;
-  // Placeholder for future actions
   onEdit: (id: number) => void;
   onDelete: (id: number, name: string) => void;
 }
 
-// Get screen dimensions for consistent card width
 const screenWidth = Dimensions.get("window").width;
 
 const RegimenCard: React.FC<RegimenCardProps> = ({
@@ -30,102 +26,121 @@ const RegimenCard: React.FC<RegimenCardProps> = ({
   onDelete,
 }) => {
   const focusText =
-    typeof item.focus === "string"
-      ? item.focus
-      : `${item.focus.type} - ${item.focus.category}`;
+    typeof item.focus === "string" ? item.focus : item.focus.category;
+  const athleteCount = Object.keys(item.assigned_athletes).length;
 
   return (
-    <View style={styles.container}>
-      {/* Action buttons section (similar to PracticeCategoryModal) */}
-      <View style={styles.actionButtonsContainer}>
-        {/* Placeholder for Edit */}
-        <Pressable
-          onPress={() => onEdit(item.id)}
-          style={[styles.actionButton, styles.editButton]}
-        >
-          <Text style={styles.actionButtonText}>Edit</Text>
-        </Pressable>
-        {/* Placeholder for Delete */}
-        <Pressable
-          onPress={() => onDelete(item.id, item.name)}
-          style={[styles.actionButton, styles.deleteButton]}
-        >
-          <Text style={styles.actionButtonText}>Delete</Text>
-        </Pressable>
+    <View style={styles.card}>
+      <View style={styles.topRow}>
+        <View style={styles.mainInfo}>
+          <Text style={styles.name}>{item.name}</Text>
+          <View style={styles.focusBadge}>
+            <Text style={styles.focusText}>{focusText}</Text>
+          </View>
+        </View>
+        <View style={styles.actions}>
+          <Pressable onPress={() => onEdit(item.id)} style={styles.iconBtn}>
+            <Feather name="edit-2" size={18} color="#007AFF" />
+          </Pressable>
+          <Pressable
+            onPress={() => onDelete(item.id, item.name)}
+            style={styles.iconBtn}
+          >
+            <Feather name="trash-2" size={18} color="#DC3545" />
+          </Pressable>
+        </View>
       </View>
 
-      {/* Main content container */}
-      <View style={styles.text_container}>
-        <Text style={styles.regimen_name}>{item.name}</Text>
-        <Text>Duration: {item.duration} mins</Text>
-        <Text>Due: {item.due_date}</Text>
-        <Text>Focus: {focusText}</Text>
-        <Text>Drill Limit: {item.limitDrills}</Text>
-        <Text>
-          Assigned Athletes: {Object.keys(item.assigned_athletes).join(", ")}
-        </Text>
+      <View style={styles.divider} />
+
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Feather name="clock" size={14} color="#8E8E93" />
+          <Text style={styles.statText}>{item.duration}m</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Feather name="layers" size={14} color="#8E8E93" />
+          <Text style={styles.statText}>{item.limitDrills} Drills</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Feather name="users" size={14} color="#8E8E93" />
+          <Text style={styles.statText}>{athleteCount} Athletes</Text>
+        </View>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.dueText}>Due: {item.due_date}</Text>
+        <View style={styles.avatarStack}>
+          {/* Visual representation of assigned athletes */}
+          <View style={styles.circle}>
+            <Text style={styles.circleText}>+</Text>
+          </View>
+        </View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     backgroundColor: "white",
-    borderRadius: 20,
-    width: screenWidth * 0.9,
+    borderRadius: 16,
+    width: screenWidth * 0.92,
     alignSelf: "center",
+    padding: 16,
+    marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    position: "relative",
-    paddingBottom: 20,
-    paddingTop: 10,
-    overflow: "hidden",
-    marginBottom: 15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  text_container: {
-    marginLeft: 20,
-    marginRight: 20,
-    marginTop: 10,
-  },
-  regimen_name: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  actionButtonsContainer: {
-    position: "absolute",
-    top: 10,
-    right: 10,
+  topRow: {
     flexDirection: "row",
-    zIndex: 1,
-    backgroundColor: "transparent",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
-  actionButton: {
-    paddingVertical: 7,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    marginLeft: 5,
+  mainInfo: { flex: 1 },
+  name: { fontSize: 18, fontWeight: "800", color: "#1A1C1E", marginBottom: 6 },
+  focusBadge: {
+    backgroundColor: "#f0f0f0",
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  focusText: {
+    fontSize: 11,
+    color: "#666",
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  actions: { flexDirection: "row" },
+  iconBtn: { marginLeft: 12, padding: 4 },
+  divider: { height: 1, backgroundColor: "#F1F3F5", marginVertical: 12 },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  statItem: { flexDirection: "row", alignItems: "center" },
+  statText: { marginLeft: 5, fontSize: 13, color: "#444", fontWeight: "500" },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  dueText: { fontSize: 12, color: "#8E8E93", fontStyle: "italic" },
+  avatarStack: { flexDirection: "row" },
+  circle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#EC1D25",
     alignItems: "center",
     justifyContent: "center",
   },
-  editButton: {
-    backgroundColor: "#007AFF",
-  },
-  deleteButton: {
-    backgroundColor: "#DC3545",
-  },
-  actionButtonText: {
-    color: "white",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
+  circleText: { color: "white", fontSize: 12, fontWeight: "bold" },
 });
 
 export default RegimenCard;

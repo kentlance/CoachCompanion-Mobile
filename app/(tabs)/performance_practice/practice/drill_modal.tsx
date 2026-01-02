@@ -141,8 +141,10 @@ const styles = StyleSheet.create({
   },
   stepContainer: {
     flexDirection: "row",
-    marginBottom: 8,
-    alignItems: "flex-start",
+    marginBottom: 16,
+    backgroundColor: "#F8F9FA",
+    padding: 12,
+    borderRadius: 10,
   },
   stepText: {
     flex: 1,

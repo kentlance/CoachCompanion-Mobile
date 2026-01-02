@@ -1,21 +1,23 @@
 // app/performance_practice/performance/athlete_modal.tsx
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Athlete } from "./interfaces"; // Import the Athlete interface
 
 interface AthleteModalProps {
-  athlete: Athlete; // Pass the entire athlete object
+  athlete: Athlete;
+  onPress: () => void;
 }
-
-export default function AthleteModal({ athlete }: AthleteModalProps) {
+export default function AthleteModal({ athlete, onPress }: AthleteModalProps) {
   return (
-    <View style={styles.container}>
+    <Pressable style={styles.container} onPress={onPress}>
       {/* Athlete Image Placeholder */}
       <View style={styles.athlete_image_placeholder}>
         <Text style={styles.athlete_number}>{athlete.player_no}</Text>
       </View>
-      <Text style={styles.athlete_name}>{athlete.first_name} {athlete.last_name}</Text>
-    </View>
+      <Text style={styles.athlete_name}>
+        {athlete.first_name} {athlete.last_name}
+      </Text>
+    </Pressable>
   );
 }
 

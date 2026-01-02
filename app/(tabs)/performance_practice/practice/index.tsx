@@ -2,6 +2,7 @@
 import Entypo from "@expo/vector-icons/Entypo";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
@@ -21,7 +22,6 @@ import GenerateRegimenModal from "./generate_regimen_modal";
 import PracticeCategoryModal from "./practice_category_card";
 import PracticeFormModal from "./practice_form_modal";
 import practices_list_initial from "./practices";
-import TrainingRegimen from "./regimen/training_regimens";
 
 // debug for generating trainingSamples for algo
 // end debug for generating trainingSamples for algo
@@ -201,6 +201,12 @@ const PracticeScreen: React.FC = () => {
     setEditingPractice(null);
   };
 
+  const handleShowPracticeRegimens = () => {
+    router.push({
+      pathname: "/performance_practice/practice/regimen/practice_regimens",
+    });
+  };
+
   const handleDrillPress = (drill: DrillItem) => {
     setSelectedDrill(drill);
     setIsDrillModalVisible(true);
@@ -274,38 +280,15 @@ const PracticeScreen: React.FC = () => {
             {/** if user is athlete, show assigned regimens, if user is coach, show created regimens
              * not implemented for now
              */}
-            {/** debug for creating synthetic samples 
-             * 
-            <Pressable
-              style={styles.addButton}
-              onPress={() => {
-                const synthetic = generateSyntheticSamples(
-                  drills_list_initial,
-                  statKeys,
-                  50
-                );
-                console.log("Generated synthetic samples:", synthetic);
-              }}
-            >
-              <Text style={styles.addButtonText}>#</Text>
-            </Pressable>
-            */}
 
+            {/** should instead be maybe router push NOT pressable expand */}
             <Animated.View layout={LinearTransition}>
               <Pressable
-                style={styles.category_header}
-                onPress={() => toggleSection("created")}
+                onPress={handleShowPracticeRegimens}
+                style={styles.category_button}
               >
-                <Text style={styles.category_text}>
-                  {expandedSections.created ? "▼ " : "▶ "} Created Regimens
-                </Text>
+                <Text>Created Regimens</Text>
               </Pressable>
-
-              {expandedSections.created && (
-                <View>
-                  <TrainingRegimen />
-                </View>
-              )}
             </Animated.View>
 
             <Animated.View layout={LinearTransition}>
@@ -320,7 +303,12 @@ const PracticeScreen: React.FC = () => {
 
               {expandedSections.regimens && (
                 <View>
-                  <View>{/* Practice Regimens go here */}</View>
+                  <View>
+                    {/* Practice Regimens go here
+                  Show the list of athletes
+                  inside the athlete cards, show Practice Regimen (the regimens assigned to that specific athlete)
+                  */}
+                  </View>
                 </View>
               )}
             </Animated.View>
@@ -403,11 +391,6 @@ const PracticeScreen: React.FC = () => {
               value={drillSearchQuery}
               onChangeText={(text) => setDrillSearchQuery(text)}
             />
-            <View style={styles.floatingButtonsContainer}>
-              <Pressable onPress={handleAddDrill} style={styles.addButton}>
-                <Text style={styles.addButtonText}>+</Text>
-              </Pressable>
-            </View>
 
             {filteredDrills.length > 0 ? (
               <View style={styles.filteredDrillsContent}>
@@ -459,7 +442,12 @@ const PracticeScreen: React.FC = () => {
           </Text>
         </Pressable>
 
-        <Pressable onPress={handleAddPractice} style={styles.addButton}>
+        <Pressable
+          onPress={
+            selectedCategoryId !== null ? handleAddDrill : handleAddPractice
+          }
+          style={styles.addButton}
+        >
           <Text style={styles.addButtonText}>
             <Entypo name="plus" size={24} color="white" />
           </Text>
@@ -583,7 +571,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     backgroundColor: "#f9f9f9",
-    position: "relative",
   },
   backButton: {
     paddingVertical: 10,
@@ -678,5 +665,17 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 15,
     paddingHorizontal: 5,
+  },
+  category_button: {
+    backgroundColor: "#acd0f8ff",
+    padding: 12,
+    borderRadius: 30,
+    outlineWidth: 1,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  category_button_text: {
+    color: "white",
+    fontSize: 16,
   },
 });
