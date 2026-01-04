@@ -234,7 +234,7 @@ export function buildForest(
   return forest;
 }
 
-function predictForest(
+export function predictForest(
   forest: TreeNode[],
   input: { [key in StatKey]: number }
 ): number[] {

@@ -5,7 +5,9 @@ import DateTimePicker, {
 import React, { useState } from "react";
 
 import { Checkbox } from "expo-checkbox";
+import { router } from "expo-router";
 import {
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -14,9 +16,14 @@ import {
   View,
 } from "react-native";
 import athleteList from "../performance/athlete_list";
+import game_record_data from "../performance/game_records";
 import { Athlete } from "../performance/interfaces";
+import { analyzePlayerPerformance } from "../performance/utils/performanceUtils";
+import drills_list from "./drills_list";
 import { modalFormStyles } from "./modalFormStyles";
 import practices_list from "./practices";
+import { buildForest, predictForestWeighted } from "./randomForestAlgo";
+import trainingSamples from "./trainingSample";
 
 interface RegimenFormModalProps {
   visible: boolean;
@@ -41,6 +48,19 @@ interface RegimenFormModalProps {
   } | null;
 }
 
+const REVERSE_STAT_LABELS: { [key: string]: string } = {
+  "FG% Efficiency": "FG_PCT",
+  "2PT% Efficiency": "_2PTS_PCT",
+  "3PT% Efficiency": "_3PTS_PCT",
+  "FT% Efficiency": "FT_PCT",
+  "Rebounding (Total)": "REB",
+  Assists: "assists",
+  "Steals (Defense)": "steals",
+  "Blocks (Defense)": "blocks",
+  Turnovers: "turnovers",
+  "Scoring (Points)": "points",
+};
+
 const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
   visible,
   onClose,
@@ -64,9 +84,97 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
   };
 
   const handleSave = () => {
-    // check if fields are empty
-    // then for loop of choosing drills algorithm for each assigned athlete
+    if (!name || selectedAthletes.length === 0) {
+      Alert.alert("Error", "Please fill in the name and select athletes.");
+      return;
+    }
+
+    let finalAthleteIds: string[] = [];
+    if (assignmentType === "all") {
+      finalAthleteIds = athleteList.map((a) => a.athlete_no.toString());
+    } else if (assignmentType === "positions") {
+      finalAthleteIds = athleteList
+        .filter((a) => selectedAthletes.includes(a.position))
+        .map((a) => a.athlete_no.toString());
+    } else {
+      finalAthleteIds = selectedAthletes;
+    }
+
+    // Object to store { athleteId: [drillId1, drillId2] }
+    const assignments: Record<string, number[]> = {};
+
+    if (selectedCategory === "athleteSpecific") {
+      // 1. Build the forest once for the session
+      const forest = buildForest(trainingSamples, [
+        "FG_PCT",
+        "_2PTS_PCT",
+        "_3PTS_PCT",
+        "FT_PCT",
+        "REB",
+        "assists",
+        "steals",
+        "blocks",
+        "turnovers",
+        "points",
+      ]);
+
+      finalAthleteIds.forEach((idStr) => {
+        const athleteId = parseInt(idStr);
+        // 2. Get performance analysis (Attention Areas)
+        const { attentionAreas } = analyzePlayerPerformance(
+          athleteId,
+          game_record_data,
+          5 // CHART_GAMES_LIMIT
+        );
+
+        // 3. Convert attentionAreas to the format expected by the Forest (StatKey: score)
+        const performanceMap: Record<string, number> = {};
+        attentionAreas.forEach((area) => {
+          // Use the reverse map to get the key (e.g., "FG_PCT") from the label (e.g., "FG% Efficiency")
+          const rawKey = REVERSE_STAT_LABELS[area.stat];
+          if (rawKey) {
+            // Math.abs is used because attention scores are negative in performanceUtils
+            performanceMap[rawKey] = Math.abs(area.score);
+          }
+        });
+
+        // 4. Generate weighted drills
+        const recommendedDrills = predictForestWeighted(
+          forest,
+          performanceMap,
+          drills_list
+        );
+
+        assignments[idStr] = recommendedDrills.slice(
+          0,
+          parseInt(drillLimit) || 3
+        );
+      });
+    } else {
+      // Logic for Practice Categories (Assign same drills to all)
+      finalAthleteIds.forEach((id) => {
+        assignments[id] = selectedPractices;
+      });
+    }
+
+    const newRegimen = {
+      id: Date.now(), // Temporary ID for navigation
+      name,
+      due_date: date.toISOString().split("T")[0],
+      assigned_athletes: finalAthleteIds,
+      focus: selectedCategory,
+      drillAssignments: assignments,
+    };
+
+    onClose();
+
+    // Navigate to edit screen with the generated data
+    router.push({
+      pathname: "/performance_practice/practice/edit_regimen_screen",
+      params: { regimenData: JSON.stringify(newRegimen) },
+    });
   };
+
   const handlePickerChange = (event: DateTimePickerEvent, value?: Date) => {
     setPickerVisible(false);
 
@@ -360,13 +468,6 @@ const RegimenFormModal: React.FC<RegimenFormModalProps> = ({
               style={[modalFormStyles.button, modalFormStyles.buttonSave]}
               onPress={handleSave}
             >
-              {/** On press, check if all fields are filled. Then, generate drills using algorithm for each assigned athlete
-               * Then save regimen to database, move to Athlete Training Regimens page to show the newly created regimen
-               *
-               * create new Regimen entry
-               * create new AthleteRegimen entry for each athlete assigned
-               * Algorithm will give at most 6 drills, slice for drillLimit
-               * */}
               <Text style={modalFormStyles.buttonText}>{saveButtonText}</Text>
             </Pressable>
           </View>
