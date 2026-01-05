@@ -18,6 +18,7 @@ const CollapsibleSection = ({ title, count, children }: any) => {
       <TouchableOpacity
         style={styles.sectionHeader}
         onPress={() => setExpanded(!expanded)}
+        activeOpacity={1}
       >
         <Text style={styles.sectionTitle}>{title}</Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>

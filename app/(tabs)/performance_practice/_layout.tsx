@@ -18,7 +18,9 @@ export default function PerformancePracticeLayout() {
   const segments: string[] = useSegments();
   const currentTab = segments[segments.length - 1] || "practice";
   const isDetailScreen =
-    segments.includes("[athleteId]") || segments.includes("team_performance");
+    segments.includes("[athleteId]") ||
+    segments.includes("team_performance") ||
+    segments.includes("practice_regimens");
   return (
     // Outer View to ensure content takes full screen height and a base background
     <View style={{ flex: 1, backgroundColor: "#f8f8f8" }}>

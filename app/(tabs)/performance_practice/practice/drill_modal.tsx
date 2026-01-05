@@ -26,6 +26,7 @@ interface DrillModalProps {
   onClose: () => void;
   showCompleteButton?: boolean; // when viewed from athlete regimen screen
   onMarkComplete?: (drillId: number) => void;
+  isCompleted?: boolean;
 }
 const getStatDisplayName = (statKey: string): string => {
   // If not found default to the key itself.
@@ -37,6 +38,7 @@ export default function DrillModal({
   onClose,
   showCompleteButton = false,
   onMarkComplete,
+  isCompleted = false,
 }: DrillModalProps) {
   return (
     <SafeAreaView style={styles.container}>
@@ -85,10 +87,15 @@ export default function DrillModal({
         )}
         {showCompleteButton && (
           <Pressable
-            style={styles.completeButton}
+            style={[
+              styles.completeButton,
+              isCompleted && { backgroundColor: "#8E8E93" }, // Grey out if completed
+            ]}
             onPress={() => onMarkComplete?.(drill.id)}
           >
-            <Text style={styles.completeButtonText}>Mark as Completed</Text>
+            <Text style={styles.completeButtonText}>
+              {isCompleted ? "Mark as Incomplete" : "Mark as Completed"}
+            </Text>
           </Pressable>
         )}
       </ScrollView>

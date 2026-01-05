@@ -1,6 +1,13 @@
 import Feather from "@expo/vector-icons/Feather";
 import React from "react";
-import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Dimensions,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface RegimenItem {
   id: number;
@@ -39,9 +46,12 @@ const RegimenCard: React.FC<RegimenCardProps> = ({
           </View>
         </View>
         <View style={styles.actions}>
-          <Pressable onPress={() => onEdit(item.id)} style={styles.iconBtn}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() => onEdit(item.id)}
+          >
             <Feather name="edit-2" size={18} color="#007AFF" />
-          </Pressable>
+          </TouchableOpacity>
           <Pressable
             onPress={() => onDelete(item.id, item.name)}
             style={styles.iconBtn}

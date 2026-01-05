@@ -24,8 +24,22 @@ export default function EditRegimenScreen() {
   const [activeAthleteId, setActiveAthleteId] = useState<number | null>(null);
 
   const handleFinalSave = () => {
-    Alert.alert("Success", "Regimen saved to database!");
-    router.replace("/performance_practice/practice"); // Return to index
+    if (regimen.isEditing) {
+      // LOGIC FOR UPDATING EXISTING
+      console.log("Updating Regimen ID:", regimen.id);
+      console.log("New Drill Assignments:", regimen.drillAssignments);
+
+      // Perform database UPDATE here
+      Alert.alert("Updated", `${regimen.name} has been updated.`);
+    } else {
+      // LOGIC FOR CREATING NEW
+      console.log("Creating New Regimen:", regimen.name);
+
+      // Perform database INSERT here
+      Alert.alert("Created", "New regimen saved to database.");
+    }
+
+    router.replace("/performance_practice/practice");
   };
 
   const handleCancel = () => {

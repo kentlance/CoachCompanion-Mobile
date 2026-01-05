@@ -106,14 +106,20 @@ const AssignedRegimenModal: React.FC<Props> = ({ assignedRegimenId }) => {
                   >
                     <Feather name="eye" size={16} color="#666" />
                   </Pressable>
-                  {!isDone && (
-                    <Pressable
-                      style={styles.checkButton}
-                      onPress={() => toggleDrillStatus(index)}
-                    >
-                      <Feather name="check" size={20} color="white" />
-                    </Pressable>
-                  )}
+
+                  <Pressable
+                    style={[
+                      styles.checkButton,
+                      isDone && { backgroundColor: "#8E8E93" },
+                    ]}
+                    onPress={() => toggleDrillStatus(index)}
+                  >
+                    <Feather
+                      name={isDone ? "rotate-ccw" : "check"}
+                      size={20}
+                      color="white"
+                    />
+                  </Pressable>
                 </View>
               </View>
             );
@@ -132,6 +138,7 @@ const AssignedRegimenModal: React.FC<Props> = ({ assignedRegimenId }) => {
             onClose={() => setSelectedDrill(null)}
             showCompleteButton={true}
             onMarkComplete={() => toggleDrillStatus(selectedDrillIndex)}
+            isCompleted={drillStatuses[selectedDrillIndex] === "completed"}
           />
         )}
       </Modal>

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,10 +13,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import AthleteCard from "../../performance/athlete_card";
 import athlete_list from "../../performance/athlete_list";
-import regimens from "../regimens"; // Assuming this is your Table 1
+import regimens from "../regimens";
+import assignedRegimens from "./assignedRegimens";
 import AthletePracticeRegimens from "./athlete_practice_regimens";
 import RegimenCard from "./regimen_card";
-import RegimenDetailView from "./regimen_detail_view"; // New component described below
+import RegimenDetailView from "./regimen_detail_view";
 
 export default function PracticeRegimens() {
   const router = useRouter();
@@ -38,12 +40,61 @@ export default function PracticeRegimens() {
     else if (selectedRegimenId !== null) setSelectedRegimenId(null);
     else router.back();
   };
+  const handleDelete = (id: number, name: string) => {
+    Alert.alert("Delete Regimen", `Are you sure you want to delete ${name}?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => console.log("Deleted", id),
+      },
+    ]);
+  };
 
+  // 2. Updated Edit handler with 'isEditing' flag
+  const handleEditRegimen = (regimen: any) => {
+    const drillAssignments: Record<number, number[]> = {};
+
+    // Find all assignments linked to this specific regimen ID
+    const linkedAssignments = assignedRegimens.filter(
+      (ar) => ar.regimenId === regimen.id
+    );
+
+    if (linkedAssignments.length > 0) {
+      // If we have specific assignments in Table 2, use those
+      linkedAssignments.forEach((assignment) => {
+        drillAssignments[assignment.assignedAthleteId] =
+          assignment.assignedDrillsId;
+      });
+    } else {
+      // Fallback: If no specific assignments exist yet, initialize
+      // the athletes from the regimen object with an empty array
+      Object.keys(regimen.assigned_athletes).forEach((id) => {
+        drillAssignments[parseInt(id)] = [];
+      });
+    }
+
+    const regimenData = {
+      id: regimen.id,
+      name: regimen.name,
+      drillAssignments: drillAssignments,
+      isEditing: true,
+    };
+
+    router.push({
+      pathname: "/performance_practice/practice/edit_regimen_screen",
+      params: { regimenData: JSON.stringify(regimenData) },
+    });
+  };
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.manualHeader}>
-        <TouchableOpacity onPress={handleHeaderBack} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={handleHeaderBack}
+          style={styles.backButton}
+          activeOpacity={1}
+        >
           <Ionicons name="arrow-back" size={28} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
@@ -66,6 +117,7 @@ export default function PracticeRegimens() {
                 key={tab}
                 onPress={() => setActiveTab(tab as any)}
                 style={[styles.tab, activeTab === tab && styles.activeTab]}
+                activeOpacity={1}
               >
                 <Text
                   style={[
@@ -92,15 +144,16 @@ export default function PracticeRegimens() {
               </View>
             ) : (
               <View>
-                {regimens.map((regimen) => (
+                {regimens.map((regimenItem) => (
                   <TouchableOpacity
-                    key={regimen.id}
-                    onPress={() => setSelectedRegimenId(regimen.id)}
+                    key={regimenItem.id}
+                    onPress={() => setSelectedRegimenId(regimenItem.id)}
+                    activeOpacity={1}
                   >
                     <RegimenCard
-                      item={regimen}
-                      onEdit={() => {}}
-                      onDelete={() => {}}
+                      item={regimenItem}
+                      onEdit={() => handleEditRegimen(regimenItem)}
+                      onDelete={(id, name) => handleDelete(id, name)}
                     />
                   </TouchableOpacity>
                 ))}

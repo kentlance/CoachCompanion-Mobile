@@ -285,9 +285,9 @@ const PracticeScreen: React.FC = () => {
             <Animated.View layout={LinearTransition}>
               <Pressable
                 onPress={handleShowPracticeRegimens}
-                style={styles.category_button}
+                style={styles.category_header}
               >
-                <Text>Created Regimens</Text>
+                <Text style={styles.category_text}>Created Regimens</Text>
               </Pressable>
             </Animated.View>
 
@@ -297,7 +297,7 @@ const PracticeScreen: React.FC = () => {
                 onPress={() => toggleSection("regimens")}
               >
                 <Text style={styles.category_text}>
-                  {expandedSections.regimens ? "▼ " : "▶ "} Practice Regimens
+                  {expandedSections.regimens ? "▼ " : "▶ "} My Regimens
                 </Text>
               </Pressable>
 
